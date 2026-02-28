@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>結局、Claudeって何ができるんだよ！全機能完全ガイド【2026年最新版】</title>
+  <style>
+    :root {
+      --orange: #f97316;
+      --orange-dark: #ea580c;
+      --orange-light: #fff7ed;
+      --orange-mid: #fed7aa;
+      --gray-900: #111827;
+      --gray-800: #1f2937;
+      --gray-700: #374151;
+      --gray-600: #4b5563;
+      --gray-400: #9ca3af;
+      --gray-200: #e5e7eb;
+      --gray-100: #f3f4f6;
+      --white: #ffffff;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.14);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+      background: var(--white);
+      color: var(--gray-800);
+      line-height: 1.75;
+      font-size: 16px;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 80px 20px 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 60% 40%, rgba(249,115,22,0.25) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(249,115,22,0.2);
+      border: 1px solid rgba(249,115,22,0.5);
+      color: #fed7aa;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 5px 16px;
+      border-radius: 99px;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 900;
+      line-height: 1.25;
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+    .hero h1 span { color: #fb923c; }
+    .hero-sub {
+      font-size: clamp(16px, 2.5vw, 20px);
+      color: #c4b5fd;
+      margin-bottom: 40px;
+      max-width: 560px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-cta {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+      color: var(--white);
+      font-size: 18px;
+      font-weight: 800;
+      padding: 18px 48px;
+      border-radius: 99px;
+      text-decoration: none;
+      box-shadow: 0 8px 32px rgba(249,115,22,0.45);
+      transition: transform 0.2s, box-shadow 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .hero-cta:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(249,115,22,0.55);
+    }
+    .hero-note {
+      font-size: 13px;
+      color: #a5b4fc;
+      margin-top: 14px;
+    }
+    .hero-scroll {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.4);
+      font-size: 22px;
+      animation: bounce 1.6s infinite;
+    }
+    @keyframes bounce {
+      0%,100%{transform:translateX(-50%) translateY(0);}
+      50%{transform:translateX(-50%) translateY(8px);}
+    }
+
+    /* ===== SECTION BASE ===== */
+    section { padding: 80px 20px; }
+    .container { max-width: 860px; margin: 0 auto; }
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 900;
+      line-height: 1.3;
+      color: var(--gray-900);
+      margin-bottom: 16px;
+    }
+    h2 span { color: var(--orange); }
+    .lead {
+      font-size: 17px;
+      color: var(--gray-600);
+      line-height: 1.85;
+      margin-bottom: 40px;
+    }
+
+    /* ===== PAIN ===== */
+    .pain { background: var(--gray-100); }
+    .pain-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    .pain-card {
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .pain-card .icon {
+      font-size: 24px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .pain-card p {
+      font-size: 15px;
+      color: var(--gray-700);
+      font-weight: 500;
+    }
+    .pain-divider {
+      background: linear-gradient(90deg, var(--orange-light) 0%, #fde68a 50%, var(--orange-light) 100%);
+      border-left: 4px solid var(--orange);
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--gray-800);
+    }
+
+    /* ===== TIMELINE ===== */
+    .timeline-section { background: var(--white); }
+    .timeline {
+      position: relative;
+      padding-left: 32px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--orange), #a855f7);
+      border-radius: 99px;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 28px;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -26px;
+      top: 6px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 0 3px var(--orange-light);
+    }
+    .timeline-item .date {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--orange);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .timeline-item .event {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gray-800);
+    }
+    .timeline-item .desc {
+      font-size: 14px;
+      color: var(--gray-600);
+    }
+    .gap-callout {
+      margin-top: 40px;
+      background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 100%);
+      border-radius: var(--radius);
+      padding: 32px;
+      color: var(--white);
+      text-align: center;
+    }
+    .gap-callout h3 { font-size: 22px; font-weight: 900; margin-bottom: 12px; }
+    .gap-callout p { font-size: 15px; color: #c4b5fd; }
+    .gap-row {
+      display: flex;
+      gap: 24px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .gap-box {
+      flex: 1 1 200px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .gap-box .label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-bottom: 8px;
+    }
+    .gap-box .text { font-size: 14px; line-height: 1.6; color: #e0e7ff; }
+
+    /* ===== FEATURES ===== */
+    .features { background: var(--gray-100); }
+    .features-intro {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 32px;
+      border: 1.5px solid var(--gray-200);
+      font-size: 16px;
+      color: var(--gray-700);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      border: 1.5px solid var(--gray-200);
+      transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--orange) 0%, #a855f7 100%);
+    }
+    .feature-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-4px);
+      border-color: var(--orange-mid);
+    }
+    .feature-num {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--orange);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .feature-icon { font-size: 36px; margin-bottom: 12px; }
+    .feature-card h3 {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--gray-900);
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--gray-600);
+      line-height: 1.7;
+    }
+    .feature-tag {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--orange-light);
+      color: var(--orange-dark);
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+
+    /* ===== BENEFITS ===== */
+    .benefits { background: var(--white); }
+    .benefits-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .benefit-item {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      background: var(--gray-100);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .benefit-num {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+      color: var(--white);
+      font-size: 18px;
+      font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .benefit-item h3 {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--gray-900);
+      margin-bottom: 6px;
+    }
+    .benefit-item p {
+      font-size: 15px;
+      color: var(--gray-600);
+      line-height: 1.7;
+    }
+
+    /* ===== TESTIMONIALS ===== */
+    .testimonials { background: var(--gray-100); }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .testimonial-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      border: 1.5px solid var(--gray-200);
+      position: relative;
+    }
+    .testimonial-card::before {
+      content: '"';
+      position: absolute;
+      top: 12px; left: 20px;
+      font-size: 72px;
+      color: var(--orange-mid);
+      font-family: Georgia, serif;
+      line-height: 1;
+    }
+    .testimonial-text {
+      font-size: 15px;
+      color: var(--gray-700);
+      line-height: 1.8;
+      margin-bottom: 20px;
+      padding-top: 24px;
+    }
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .author-avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--orange) 0%, #a855f7 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--white);
+      font-weight: 700;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .author-name { font-weight: 700; color: var(--gray-800); font-size: 14px; }
+    .author-role { font-size: 12px; color: var(--gray-400); }
+    .stars { color: #f59e0b; font-size: 14px; margin-bottom: 4px; }
+
+    /* ===== TOC ===== */
+    .toc-section { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: var(--white); }
+    .toc-section h2 { color: var(--white); }
+    .toc-section .lead { color: #94a3b8; }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .toc-item {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: background 0.2s;
+    }
+    .toc-item:hover { background: rgba(249,115,22,0.12); border-color: rgba(249,115,22,0.4); }
+    .toc-ch {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--orange);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      width: 36px;
+    }
+    .toc-title { font-size: 14px; font-weight: 600; color: #e2e8f0; }
+    .toc-stats {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 40px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .stat { text-align: center; }
+    .stat .val { font-size: 32px; font-weight: 900; color: var(--orange); }
+    .stat .unit { font-size: 14px; color: #94a3b8; margin-top: 4px; }
+
+    /* ===== FAQ ===== */
+    .faq { background: var(--gray-100); }
+    .faq-list { display: flex; flex-direction: column; gap: 12px; }
+    .faq-item {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--gray-200);
+      overflow: hidden;
+    }
+    .faq-q {
+      padding: 20px 24px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gray-800);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .faq-q::before { content: 'Q'; color: var(--orange); font-size: 18px; font-weight: 900; flex-shrink: 0; }
+    .faq-a {
+      padding: 0 24px 20px 52px;
+      font-size: 15px;
+      color: var(--gray-600);
+      line-height: 1.8;
+    }
+
+    /* ===== URGENCY ===== */
+    .urgency {
+      background: linear-gradient(135deg, var(--orange-dark) 0%, #dc2626 100%);
+      color: var(--white);
+      text-align: center;
+      padding: 64px 20px;
+    }
+    .urgency h2 { color: var(--white); font-size: clamp(22px, 3vw, 34px); margin-bottom: 12px; }
+    .urgency p { font-size: 16px; color: rgba(255,255,255,0.85); max-width: 540px; margin: 0 auto 32px; }
+    .urgency-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 5px 16px;
+      border-radius: 99px;
+      margin-bottom: 20px;
+    }
+
+    /* ===== CTA ===== */
+    .cta-section { background: var(--white); text-align: center; padding: 80px 20px; }
+    .cta-box {
+      background: linear-gradient(135deg, #f0fdf4 0%, var(--orange-light) 100%);
+      border: 2px solid var(--orange-mid);
+      border-radius: 20px;
+      padding: 48px 32px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .cta-box h2 { font-size: clamp(22px, 3vw, 30px); margin-bottom: 12px; }
+    .cta-box .price-area { margin: 24px 0; }
+    .cta-box .original {
+      font-size: 14px;
+      color: var(--gray-400);
+      text-decoration: line-through;
+    }
+    .cta-box .price { font-size: 40px; font-weight: 900; color: var(--orange-dark); line-height: 1.2; }
+    .cta-box .price sub { font-size: 18px; font-weight: 700; }
+    .cta-box .launch { font-size: 13px; color: var(--orange-dark); font-weight: 700; margin-top: 4px; }
+    .cta-btn {
+      display: block;
+      background: linear-gradient(135deg, var(--orange) 0%, var(--orange-dark) 100%);
+      color: var(--white);
+      font-size: 20px;
+      font-weight: 900;
+      padding: 20px;
+      border-radius: 99px;
+      text-decoration: none;
+      box-shadow: 0 8px 32px rgba(249,115,22,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-bottom: 14px;
+    }
+    .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(249,115,22,0.55); }
+    .cta-guarantee {
+      font-size: 13px;
+      color: var(--gray-500);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--gray-900);
+      color: var(--gray-400);
+      text-align: center;
+      padding: 32px 20px;
+      font-size: 13px;
+    }
+
+    /* ===== DIVIDER ===== */
+    .wave {
+      height: 60px;
+      background: inherit;
+      overflow: hidden;
+    }
+
+    /* ===== STICKY CTA (mobile) ===== */
+    .sticky-cta {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--orange);
+      color: var(--white);
+      font-size: 16px;
+      font-weight: 800;
+      padding: 16px;
+      text-align: center;
+      z-index: 999;
+      text-decoration: none;
+      display: none;
+      box-shadow: 0 -4px 24px rgba(249,115,22,0.4);
+    }
+    @media(max-width: 640px) {
+      .sticky-cta { display: block; }
+      body { padding-bottom: 64px; }
+    }
+
+    /* ===== HIGHLIGHT ===== */
+    .highlight-box {
+      background: var(--orange-light);
+      border-left: 4px solid var(--orange);
+      border-radius: 0 8px 8px 0;
+      padding: 18px 22px;
+      margin: 24px 0;
+      font-size: 16px;
+      color: var(--gray-800);
+      font-weight: 500;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media(max-width: 600px) {
+      .gap-row { flex-direction: column; }
+      .benefit-item { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-badge">2026年最新版 完全ガイド</div>
+  <h1>結局、<span>Claudeって</span><br>何ができるんだよ！</h1>
+  <p class="hero-sub">
+    チャットで質問するだけの時代は終わった。<br>
+    Claude全機能を1本のX記事に完全網羅。
+  </p>
+  <a href="#cta" class="hero-cta">今すぐ全機能を知る &rarr;</a>
+  <p class="hero-note">全9章・約44,000文字｜返金保証あり</p>
+  <div class="hero-scroll">↓</div>
+</section>
+
+<!-- ===== PAIN ===== -->
+<section class="pain">
+  <div class="container">
+    <div class="section-label">こんな悩み、ありませんか？</div>
+    <h2>ChatGPT、Gemini、Claude。<br><span>全部使ってるのに</span>全然使いこなせてない。</h2>
+    <p class="lead">
+      2026年、AIを使ってない人はほぼいない時代。でも「ちゃんと使いこなせてる」人も、実はまだ少数派です。
+    </p>
+    <div class="pain-cards">
+      <div class="pain-card">
+        <div class="icon">🤷</div>
+        <p>「Claudeって名前は聞くけど、ChatGPTと何が違うの？」</p>
+      </div>
+      <div class="pain-card">
+        <div class="icon">😵</div>
+        <p>「Claude Code？MCP？横文字多すぎて意味わかんない」</p>
+      </div>
+      <div class="pain-card">
+        <div class="icon">💬</div>
+        <p>「なんかすごいらしいけど、チャットで質問するだけしか使ってない」</p>
+      </div>
+    </div>
+    <div class="pain-divider">
+      めちゃくちゃわかります。僕も最初はそうでした。でも、アップデートの波に乗れてる人と乗れてない人で、とんでもない差がついてるんです。
+    </div>
+  </div>
+</section>
+
+<!-- ===== TIMELINE ===== -->
+<section class="timeline-section">
+  <div class="container">
+    <div class="section-label">Claudeの進化スピード</div>
+    <h2>2025〜2026年のアップデートが<span>渋滞してる</span></h2>
+    <p class="lead">毎日使ってる僕ですら追いつくのに必死なレベルです。</p>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="date">2025年2月</div>
+        <div class="event">Claude Code リリース</div>
+        <div class="desc">ターミナルから自然言語でプログラミングを丸投げできるAIエンジニアが誕生</div>
+      </div>
+      <div class="timeline-item">
+        <div class="date">2025年5月</div>
+        <div class="event">Claude 4 リリース</div>
+        <div class="desc">コーディング・推論能力が飛躍的に向上。業界標準のAIとなる</div>
+      </div>
+      <div class="timeline-item">
+        <div class="date">2025年8月</div>
+        <div class="event">Claude in Chrome リリース</div>
+        <div class="desc">Chromeブラウザを直接操作するAIエージェントが登場</div>
+      </div>
+      <div class="timeline-item">
+        <div class="date">2026年1月</div>
+        <div class="event">Cowork リリース</div>
+        <div class="desc">パソコン上のファイル操作を丸ごとAIに代行させる機能が解禁</div>
+      </div>
+      <div class="timeline-item">
+        <div class="date">2026年2月</div>
+        <div class="event">Opus 4.6 ＆ Agent Teams リリース</div>
+        <div class="desc">複数AIがチームを組んで並行作業。さらに高性能なモデルが登場</div>
+      </div>
+    </div>
+
+    <div class="gap-callout">
+      <h3>乗れてる人と乗れてない人で<br>見える景色が全然違う</h3>
+      <p>この差は半年後にさらに拡大します</p>
+      <div class="gap-row">
+        <div class="gap-box">
+          <div class="label">乗れてる人</div>
+          <div class="text">AIにブラウザ操作させて情報収集を自動化。プログラミング未経験なのにWebアプリを作成。パソコンのファイル整理を丸投げ。</div>
+        </div>
+        <div class="gap-box">
+          <div class="label">乗れてない人</div>
+          <div class="text">まだチャットで「〇〇について教えて」って聞いてるだけ。公式ドキュメントは英語が多く、日本語情報は断片的。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="features">
+  <div class="container">
+    <div class="section-label">このX記事でわかること</div>
+    <h2>Claude<span>全8機能</span>を完全解説</h2>
+    <p class="lead">「どんな機能があるか」だけじゃなく、「自分の仕事にどう使えるか」まで具体的に書いてます。</p>
+
+    <div class="features-intro">
+      Claudeには8つの主要機能があります。でも全部使う必要はないんです。あなたの仕事や目的に合わせて、<strong>どれから使えばいいかがわかるように</strong>構成しています。
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-num">Chapter 1</div>
+        <div class="feature-icon">💬</div>
+        <h3>基本機能</h3>
+        <p>チャット・ファイル作成・Web検索。土台をしっかり理解することで、他の機能が格段に使いやすくなります。</p>
+        <span class="feature-tag">全プラン対応</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">Chapter 2</div>
+        <div class="feature-icon">📁</div>
+        <h3>Project</h3>
+        <p>特定の業務専用のClaudeを作れる機能。毎回コンテキストをゼロから説明する手間がなくなります。</p>
+        <span class="feature-tag">Pro以上</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">Chapter 3</div>
+        <div class="feature-icon">🎨</div>
+        <h3>アーティファクト</h3>
+        <p>プレビュー付きでWebアプリやUIを作成。プログラミング未経験でも動くツールが作れます。</p>
+        <span class="feature-tag">全プラン対応</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">Chapter 4</div>
+        <div class="feature-icon">⚡</div>
+        <h3>Skills</h3>
+        <p>決まったワークフローをClaudeに覚えさせる機能。テーマを伝えるだけで毎回同じ品質のアウトプットが出ます。</p>
+        <span class="feature-tag">全プラン対応</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">Chapter 5-6</div>
+        <div class="feature-icon">🔗</div>
+        <h3>MCP連携</h3>
+        <p>ClaudeとGmail・Slack・Notion・Figmaなど50以上のツールをノーコードで接続。AIが実データにアクセスします。</p>
+        <span class="feature-tag">Pro以上</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">Chapter 7</div>
+        <div class="feature-icon">💻</div>
+        <h3>Claude Code</h3>
+        <p>ターミナルで動くAIエンジニア。自然言語で指示するだけでコードを書き、バグを直し、Gitも操作します。</p>
+        <span class="feature-tag">Pro以上</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">Chapter 8</div>
+        <div class="feature-icon">🖥️</div>
+        <h3>Cowork</h3>
+        <p>ローカルファイルを直接操作するAI同僚。「アドバイスをくれる」から「やっておきましたよ」に変わります。</p>
+        <span class="feature-tag">Pro以上</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">Chapter 9</div>
+        <div class="feature-icon">🌐</div>
+        <h3>Claude in Chrome</h3>
+        <p>ブラウザを実際に操作するエージェント。情報収集・フォーム入力・定期レポートを完全自動化します。</p>
+        <span class="feature-tag">Pro以上</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BENEFITS ===== -->
+<section class="benefits">
+  <div class="container">
+    <div class="section-label">読み終えると</div>
+    <h2>読み終わった頃には、<br><span>使いこなしてる側</span>の人間になってます</h2>
+    <p class="lead">ただの機能紹介じゃありません。「で、それ使って何ができるの？」まで全部書いてます。</p>
+
+    <div class="benefits-list">
+      <div class="benefit-item">
+        <div class="benefit-num">1</div>
+        <div>
+          <h3>Claudeの全体像がスッキリ見えるようになる</h3>
+          <p>「なんかいろいろあるらしいけどよくわからん」だったのが、「あ、こういう構造になってるのか」って腑に落ちます。8機能の関係性と使い分けがクリアになります。</p>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-num">2</div>
+        <div>
+          <h3>自分に合った機能がすぐわかる</h3>
+          <p>各機能で必要なプランも明記しているので、無料プランでもできることが明確。「自分はどれから始めればいいか」がすぐ判断できます。</p>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-num">3</div>
+        <div>
+          <h3>読んだその日から試せる</h3>
+          <p>各章に具体的な使い方と実践シーンを入れてます。「これ読んで試してみたら本当に動いた」という体験が積み重なります。</p>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-num">4</div>
+        <div>
+          <h3>「AIを使いこなしてる人」の仲間入りができる</h3>
+          <p>周りが「ChatGPTで文章作らせた」と言ってる横で、あなたは「Claudeにブラウザ操作させて競合調査を自動化した」と言えるようになります。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section class="testimonials">
+  <div class="container">
+    <div class="section-label">実際に読んだ人の声</div>
+    <h2>「もっと早く知りたかった」<br>が一番多いコメントです</h2>
+    <p class="lead" style="margin-bottom: 32px;">返金保証があるから気軽に読んだら、想定外にガチだったという声が続出。</p>
+
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">Claudeの存在は知ってたけど、ChatGPTで十分だと思ってました。このX記事を読んでProjectとSkillsを使い始めたら、クライアントワークの質が明らかに変わりました。もっと早く知りたかった。</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">A</div>
+          <div>
+            <div class="author-name">Aさん</div>
+            <div class="author-role">30代・フリーランスWebデザイナー</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">プログラミングなんて絶対ムリだと思ってたのに、Claude Codeの章を読んで試してみたら、本当にWebアプリが動いて笑いました。こんなに簡単だったの？って感じです。</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">B</div>
+          <div>
+            <div class="author-name">Bさん</div>
+            <div class="author-role">40代・副業ブロガー</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">正直「またAIの情報商材か」と疑ってました。でも返金保証もあるしと思って読んだら、ガチで全機能網羅されてて驚きました。特にMCP連携の章は他のどの記事よりわかりやすかった。</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">C</div>
+          <div>
+            <div class="author-name">Cさん</div>
+            <div class="author-role">20代・会社員</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TOC ===== -->
+<section class="toc-section">
+  <div class="container">
+    <div class="section-label" style="color:#fb923c;">全9章構成</div>
+    <h2>このX記事の中身</h2>
+    <p class="lead">気になるところから読んでもOK。各章が独立して完結しているので、辞書的にも使えます。</p>
+
+    <div class="toc-grid">
+      <div class="toc-item">
+        <span class="toc-ch">Ch.1</span>
+        <span class="toc-title">Claudeの基本機能（チャット・ファイル作成・Web検索）</span>
+      </div>
+      <div class="toc-item">
+        <span class="toc-ch">Ch.2</span>
+        <span class="toc-title">Projectで"専属AI"を作る</span>
+      </div>
+      <div class="toc-item">
+        <span class="toc-ch">Ch.3</span>
+        <span class="toc-title">アーティファクトで"作品"を生み出す</span>
+      </div>
+      <div class="toc-item">
+        <span class="toc-ch">Ch.4</span>
+        <span class="toc-title">Skillsで自分だけのClaudeにカスタムする</span>
+      </div>
+      <div class="toc-item">
+        <span class="toc-ch">Ch.5</span>
+        <span class="toc-title">MCP連携の基本 〜AIと外部ツールをつなぐ仕組み〜</span>
+      </div>
+      <div class="toc-item">
+        <span class="toc-ch">Ch.6</span>
+        <span class="toc-title">MCP連携できるツール全カタログ（50以上）</span>
+      </div>
+      <div class="toc-item">
+        <span class="toc-ch">Ch.7</span>
+        <span class="toc-title">Claude Codeでプログラミングを丸投げする</span>
+      </div>
+      <div class="toc-item">
+        <span class="toc-ch">Ch.8</span>
+        <span class="toc-title">Coworkでパソコン作業を代行させる</span>
+      </div>
+      <div class="toc-item">
+        <span class="toc-ch">Ch.9</span>
+        <span class="toc-title">Claude in Chromeでブラウザ操作を自動化する</span>
+      </div>
+    </div>
+
+    <div class="toc-stats">
+      <div class="stat">
+        <div class="val">9</div>
+        <div class="unit">章構成</div>
+      </div>
+      <div class="stat">
+        <div class="val">44,000</div>
+        <div class="unit">文字以上</div>
+      </div>
+      <div class="stat">
+        <div class="val">50+</div>
+        <div class="unit">MCPツール紹介</div>
+      </div>
+      <div class="stat">
+        <div class="val">2026/2</div>
+        <div class="unit">最新情報</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="faq">
+  <div class="container">
+    <div class="section-label">よくある質問</div>
+    <h2>これって<span>自分にも</span>使えますか？</h2>
+    <p class="lead" style="margin-bottom:32px;">読む前に気になるポイントをまとめました。</p>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">「自分にはまだ早いかも」と思ってます</div>
+        <div class="faq-a">Claudeの基本チャット機能を使ったことがあれば大丈夫です。第1章から順番に読めば、自然とステップアップできるように構成しています。プログラミング経験ゼロでも読めます。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">忙しくて全部読む時間がないかもしれません</div>
+        <div class="faq-a">目次から自分に関係ある章だけ読んでもOKです。各章が独立して完結しているので、辞書的に使えます。気になった機能から試してみるだけでも十分価値があります。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Claudeの無料プランでも内容を活かせますか？</div>
+        <div class="faq-a">基本機能やアーティファクト、Skillsは無料でも使えます。各機能でどのプランが必要かも明記しているので、自分のプランに合った使い方がすぐわかります。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">情報が古くなったりしませんか？</div>
+        <div class="faq-a">Claudeのアップデートに合わせて内容を随時更新する予定です。一度購入すれば、更新版も追加料金なしで読めます。2026年2月時点の最新情報をベースにしています。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">AIスクールと何が違うの？</div>
+        <div class="faq-a">同じ内容をAIスクールで学ぼうとしたら、月額1万円以上は普通にかかります。しかも情報が古かったり、Claude以外のツールも混ざったりします。このX記事はClaudeの全機能だけに絞った、本1冊分の価格でスクール数ヶ月分の情報密度です。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== URGENCY ===== -->
+<section class="urgency">
+  <div class="urgency-badge">⚠️ 重要なお知らせ</div>
+  <h2>今の段階でClaudeの全体像を<br>掴めているかどうか。<br>半年後に見える景色が違います。</h2>
+  <p>知ってる人は黙って使って、仕事の質もスピードも上げてる。知らない人はその差にすら気づかない。これが一番こわいところです。</p>
+  <a href="#cta" class="hero-cta" style="background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4); box-shadow: none;">今すぐ差を埋める &rarr;</a>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="cta-section" id="cta">
+  <div class="cta-box">
+    <div class="section-label" style="text-align:center;">発売記念 特別価格</div>
+    <h2>結局、Claudeって何ができるんだよ！<br><span>全機能完全ガイド【2026年最新版】</span></h2>
+    <div class="price-area">
+      <div class="original">通常価格より割引中</div>
+      <div class="price"><sub>¥</sub>XXX</div>
+      <div class="launch">発売記念特別価格（段階的に値上げ予定）</div>
+    </div>
+
+    <div class="highlight-box" style="text-align:left; margin-bottom:24px;">
+      半年後も「Claudeってよくわかんない」のまま過ごしますか？<br>
+      それとも、今日この瞬間にClaudeの全体像を掴んで、明日から使いこなす側になりますか？
+    </div>
+
+    <a href="#" class="cta-btn">今すぐ読む →</a>
+    <div class="cta-guarantee">🔒 返金保証あり｜安心してお試しいただけます</div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <p>© 2026 Claude全機能完全ガイド｜2026年2月時点の最新情報をもとに作成</p>
+  <p style="margin-top:8px; font-size:12px; opacity:0.6;">Claude・Anthropicは各社の商標です。本X記事はAnthropicの公式コンテンツではありません。</p>
+</footer>
+
+<!-- Sticky CTA (mobile) -->
+<a href="#cta" class="sticky-cta">今すぐ読む →</a>
+
+</body>
+</html>
