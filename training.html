@@ -167,6 +167,33 @@
   .memo-in::placeholder { color: var(--faint); font-size: 14px; }
   .memo-in:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   .restafter { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 10px -14px -14px; padding: 10px 14px; background: rgba(61, 139, 255, .12); border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius); color: #c8dbff; font-size: 14px; }
+  .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -16px 12px; padding: 0 16px 4px 0; scrollbar-width: thin; }
+  .mtable { border-collapse: separate; border-spacing: 0 6px; }
+  .mtable th, .mtable td { padding: 0 3px 0 0; vertical-align: middle; }
+  .mtable thead th { font-size: 11px; color: var(--muted); font-weight: 700; text-align: center; padding-bottom: 0; }
+  .mtable thead th.sticky { text-align: left; }
+  .mtable .sticky { position: sticky; left: 0; z-index: 2; background: var(--bg); padding: 0 5px 0 16px; }
+  .mtable thead th.sticky { padding-left: 20px; }
+  .exbtn { width: 8.2rem; min-height: 58px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; display: block; }
+  .exbtn b { display: block; font-size: 13.5px; line-height: 1.25; word-break: break-all; }
+  .exbtn small { display: block; font-size: 10.5px; color: var(--muted); line-height: 1.3; margin-top: 2px; }
+  .exbtn.alldone { border-color: var(--good); }
+  .cell { width: 4.4rem; height: 58px; border-radius: 10px; border: 1px dashed var(--line); background: transparent; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-variant-numeric: tabular-nums; padding: 0 2px; }
+  .cell b { font-size: 15px; font-weight: 700; letter-spacing: -.02em; white-space: nowrap; }
+  .cell small { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+  .cell.done { border: 1px solid var(--good); background: var(--good-soft); color: var(--text); }
+  .cell.done.under { border-color: var(--warn); background: rgba(242, 179, 61, .10); }
+  .cell.add { color: var(--faint); font-size: 22px; width: 3rem; }
+  .restrow td { padding: 0; }
+  .restband { display: flex; align-items: center; gap: 12px; padding: 6px 10px; border-radius: 10px; background: rgba(61, 139, 255, .12); color: #c8dbff; font-size: 13px; width: max-content; min-width: 100%; }
+  .cellgrid { display: grid; grid-template-columns: 2.6rem repeat(var(--n), minmax(0, 1fr)); gap: 6px; align-items: center; }
+  .cellgrid .h { font-size: 11px; color: var(--muted); text-align: center; }
+  .cellgrid .lbl { font-size: 12px; color: var(--muted); }
+  .quickadd .search { margin-bottom: 6px; }
+  .qachips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pickrow.added { outline: 2px solid var(--good); }
+  .pickrow.added small::after { content: ' ✓追加'; color: var(--good); }
+  .sheet-foot { position: sticky; bottom: calc(-18px - env(safe-area-inset-bottom)); background: var(--surface); padding: 10px 0 calc(4px + env(safe-area-inset-bottom)); margin-top: 8px; }
   .imp-row { padding: 10px 0; border-top: 1px solid var(--line); }
   .imp-row:first-child { border-top: 0; }
   .imp-row .nm { font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
@@ -185,7 +212,7 @@
     padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
     animation: up .2s ease-out;
   }
-  @keyframes up { from { transform: translateY(30px); opacity: .5; } }
+  @keyframes up { from { transform: translateY(30px); } }
   .search { margin-bottom: 10px; }
   .pickgroup { font-size: 12px; color: var(--muted); font-weight: 700; margin: 12px 0 4px; }
   .pickrow { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 52px; padding: 8px 12px; border: 0; border-radius: 12px; background: var(--surface2); margin-bottom: 6px; text-align: left; }
@@ -671,6 +698,7 @@ const state = {
   statsMode: 'week',
   statsEx: null,
   pickCat: 'all',
+  qa: '',
   rec: { type: 'strength', date: null, items: null, note: '' },
 };
 let modalCtx = {};
@@ -689,7 +717,11 @@ function render() {
   const [title, fn] = VIEWS[state.view];
   $('#title').textContent = title;
   $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === state.view));
+  const sl = $('.tbl-wrap')?.scrollLeft || 0;
+  const qaFocused = document.activeElement?.id === 'qaInput';
   $('#view').innerHTML = fn();
+  const tw = $('.tbl-wrap'); if (tw) tw.scrollLeft = sl;
+  if (qaFocused) $('#qaInput')?.focus();
   afterRender[state.view]?.();
 }
 function go(view) {
@@ -714,10 +746,14 @@ function renderToday() {
     </div>
     ${isToday ? '' : '<button class="linkbtn" data-action="goToday">今日に戻る</button>'}
     ${items.length ? `<div class="card" id="summary">${summaryHtml()}</div>` : ''}
-    ${items.map(it => renderItem(it, d)).join('')}
-    ${items.length ? '' : `<div class="empty"><p>この日の計画はまだありません</p><p class="small">種目を追加するか、おすすめメニューから作れます</p></div>`}
+    ${items.length ? `<div class="seg" role="tablist">
+      <button class="${todayView() === 'table' ? 'active' : ''}" data-action="setView" data-v="table" role="tab">表で見る</button>
+      <button class="${todayView() === 'cards' ? 'active' : ''}" data-action="setView" data-v="cards" role="tab">1種目ずつ入力</button></div>` : ''}
+    ${items.length ? (todayView() === 'table' ? renderTable(items, d) : items.map(it => renderItem(it, d)).join('')) : ''}
+    ${items.length ? '' : `<div class="empty"><p>この日のメニューはまだありません</p><p class="small">下の欄に種目名を入れるか、よく使う種目をタップして追加できます</p></div>`}
+    ${quickAddHtml()}
     <div class="actions">
-      <button class="btn primary block" data-action="addItem">＋ 種目を追加</button>
+      <button class="btn block" data-action="addItem">一覧から種目を選ぶ</button>
       <div class="row2">
         <button class="btn block" data-action="importText">テキストから取り込み</button>
         <button class="btn block" data-action="copyDay">他の日からコピー</button>
@@ -832,13 +868,133 @@ function onSetInput(el) {
 function addItemToDay(exId, date) {
   const ex = exById(exId);
   if (!ex) return null;
-  const n = ex.cat === 'strength' ? 3 : ex.cat === 'hiit' ? 8 : 1;
-  const p = { c1: ex.def?.c1 ?? null, c2: ex.def?.c2 ?? null, v: ex.def?.v ?? null };
-  const it = { id: uid(), exId, rest: ex.rest ?? 0, sets: Array.from({ length: n }, () => ({ p: { ...p }, a: null, done: false })) };
+  const prev = historyOf(exId, date)[0];
+  let it;
+  if (prev) {
+    // 前回の記録があれば、前回の実績を計画として入れる
+    it = { id: uid(), exId, rest: prev.item.rest ?? ex.rest ?? 0, sets: cloneSetsAsPlan(prev.item.sets.filter(s => s.done)) };
+  } else {
+    const n = ex.cat === 'strength' ? 3 : ex.cat === 'hiit' ? 8 : 1;
+    const p = { c1: ex.def?.c1 ?? null, c2: ex.def?.c2 ?? null, v: ex.def?.v ?? null };
+    it = { id: uid(), exId, rest: ex.rest ?? 0, sets: Array.from({ length: n }, () => ({ p: { ...p }, a: null, done: false })) };
+  }
   ensureSession(date).items.push(it);
   return it;
 }
 const cloneSetsAsPlan = sets => sets.map(s => ({ p: { ...(s.done ? actualVals(s) : s.p) }, a: null, done: false }));
+
+/* ---------- 表ビュー ---------- */
+const todayView = () => db.settings.todayView || 'table';
+const ctxItem = el => itemOf(el) || findItem(modalCtx.itemId);
+function refreshItem(id) {
+  if (state.view !== 'today') return;
+  if (todayView() === 'cards' && $(`[data-item="${id}"]`)) { rerenderItem(id); updateSummary(); }
+  else render();
+}
+function maybeStartRest(it) {
+  const ex = exById(it.exId);
+  unlockAudio();
+  if (it.rest > 0 && ex && ex.measure !== 'time') startRest(it.rest);
+}
+/** 表のセル用の短い表記 { main, sub } */
+function cellText(ex, v) {
+  const num = x => x == null ? '–' : String(r2(x));
+  if (ex.measure === 'reps' && ex.c1 && !ex.c2) {
+    if (v.c1 == null || (v.c1 === 0 && ex.c1.unit === 'kg')) return { main: `${num(v.v)}回`, sub: v.c1 === 0 ? '自重' : '' };
+    return { main: `${num(v.c1)}×${num(v.v)}`, sub: '' };
+  }
+  let main;
+  if (ex.measure === 'reps') main = `${num(v.v)}回`;
+  else if (ex.measure === 'dist') main = v.v == null ? '–' : v.v >= 1000 ? `${r2(v.v / 1000)}km` : `${r2(v.v)}m`;
+  else main = v.v == null ? '–' : isMin(ex) ? `${r2(v.v / 60)}分` : (v.v >= 60 && v.v % 60 === 0 ? `${v.v / 60}分` : `${v.v}秒`);
+  const sub = [ex.c1 && v.c1 != null ? num(v.c1) : null, ex.c2 && v.c2 != null ? num(v.c2) : null].filter(x => x != null).join('/');
+  return { main, sub };
+}
+function unitHint(ex) {
+  if (ex.measure === 'reps' && ex.c1 && !ex.c2) return `${ex.c1.unit}×回`;
+  const cs = [ex.c1, ex.c2].filter(Boolean).map(c => c.label);
+  return (cs.length ? cs.join('/') + ' · ' : '') + MEASURES[ex.measure];
+}
+function renderTable(items, d) {
+  const cols = Math.max(3, ...items.map(it => it.sets.length + 1));
+  const head = `<tr><th class="sticky">種目</th>${Array.from({ length: cols }, (_, i) => `<th>${i + 1}</th>`).join('')}</tr>`;
+  const rows = items.map(it => {
+    const ex = exById(it.exId) || MISSING_EX, done = it.sets.filter(s => s.done).length;
+    const cells = it.sets.map((s, i) => {
+      const t = cellText(ex, s.done ? actualVals(s) : s.p);
+      return `<td><button class="cell ${s.done ? 'done' : ''} ${isUnder(s) ? 'under' : ''}" data-action="cellEdit" data-set="${i}" aria-label="セット${i + 1} ${s.done ? '完了' : '未完了'}"><b>${esc(t.main)}</b>${t.sub ? `<small>${esc(t.sub)}</small>` : ''}</button></td>`;
+    });
+    cells.push(`<td><button class="cell add" data-action="cellAdd" aria-label="セットを追加">＋</button></td>`);
+    while (cells.length < cols) cells.push('<td></td>');
+    return `<tr data-item="${it.id}">
+        <th class="sticky"><button class="exbtn ${done === it.sets.length && done ? 'alldone' : ''}" data-action="itemMenu">
+          <b>${esc(ex.name)}</b><small>${done}/${it.sets.length}セット · ${esc(unitHint(ex))}${it.memo ? ' · 📝' : ''}</small></button></th>
+        ${cells.join('')}</tr>
+      ${it.restAfter > 0 ? `<tr class="restrow" data-item="${it.id}"><td colspan="${cols + 1}"><div class="restband"><span>レスト <b>${fmtDur(it.restAfter)}</b></span><button class="btn small" data-action="restAfterStart">▶ 開始</button></div></td></tr>` : ''}`;
+  }).join('');
+  return `<div class="tbl-wrap"><table class="mtable"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
+    <p class="small muted" style="margin:-4px 0 12px">セルをタップで記録・変更、種目名をタップで前回と同じ・休憩・メモなど</p>`;
+}
+function openCell(itemId, idx) {
+  const it = findItem(itemId), s = it?.sets[idx], ex = exById(it?.exId);
+  if (!s || !ex) return;
+  modalCtx = { itemId, set: idx };
+  const fields = itemFields(ex);
+  const lbl = f => f === 'v' ? `${MEASURES[ex.measure]}(${vUnit(ex)})` : `${esc(ex[f].label)}(${esc(ex[f].unit)})`;
+  const show = (vals, f) => f === 'v' ? toIn(ex, vals.v) : fmtIn(vals[f]);
+  const av = s.done ? actualVals(s) : null;
+  openModal(`
+    <h2>${esc(ex.name)}　<span class="muted">セット${idx + 1}</span></h2>
+    <button class="btn ${s.done ? '' : 'primary'} block xl" data-action="cellDone">${s.done ? '未完了に戻す' : '✓ 計画どおりできた'}</button>
+    <form id="cellForm" style="margin-top:14px">
+      <div class="cellgrid" style="--n:${fields.length}">
+        <span></span>${fields.map(f => `<span class="h">${lbl(f)}</span>`).join('')}
+        <span class="lbl">計画</span>${fields.map(f => `<input class="in plan" name="p_${f}" inputmode="decimal" autocomplete="off" value="${show(s.p, f)}">`).join('')}
+        <span class="lbl">実績</span>${fields.map(f => `<input class="in act" name="a_${f}" inputmode="decimal" autocomplete="off" value="${av ? show(av, f) : ''}" placeholder="${show(s.p, f)}">`).join('')}
+      </div>
+      <p class="hint" style="margin:8px 0 10px">実績が計画と違うときだけ入力します（空欄は計画どおり扱い）。</p>
+      ${idx < it.sets.length - 1 ? '<div class="field"><label class="check-row"><input type="checkbox" name="toRest">この計画を後ろのセットにも入れる</label></div>' : ''}
+      <div class="row2">
+        <button type="button" class="btn ghost danger" data-action="cellDel">セットを削除</button>
+        <button type="submit" class="btn primary">保存</button>
+      </div>
+    </form>`);
+}
+function readCellForm(it, s, planOnly) {
+  const form = $('#cellForm'), ex = exById(it.exId);
+  if (!form) return;
+  const val = (name, f) => { const x = parseNum(form.elements[name]?.value); return x == null ? null : (f === 'v' ? fromIn(ex, x) : x); };
+  const fields = itemFields(ex);
+  fields.forEach(f => { s.p[f] = val(`p_${f}`, f); });
+  if (form.elements.toRest?.checked) it.sets.slice(modalCtx.set + 1).forEach(x => { if (!x.done) x.p = { ...s.p }; });
+  if (planOnly) return;
+  const a = {}; let any = false;
+  fields.forEach(f => { const x = val(`a_${f}`, f); if (x != null) { a[f] = x; any = true; } });
+  if (any) { const wasDone = s.done; s.a = { ...s.p, ...a }; s.done = true; if (!wasDone) maybeStartRest(it); }
+  else if (s.done) s.a = { ...s.p };
+}
+function quickAddHtml() {
+  const counts = {};
+  db.sessions.forEach(ss => ss.items.forEach(i => { counts[i.exId] = (counts[i.exId] || 0) + 1; }));
+  const inToday = new Set((sessionOf(state.date)?.items || []).map(i => i.exId));
+  const freq = Object.entries(counts).filter(([id]) => exById(id) && !inToday.has(id)).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([id]) => exById(id));
+  return `<div class="card quickadd">
+    <label class="fieldlbl" for="qaInput">種目を追加</label>
+    <input id="qaInput" class="search" type="search" autocomplete="off" placeholder="種目名を入力（例：ベンチ）" value="${esc(state.qa || '')}">
+    <div id="qaList">${qaListHtml()}</div>
+    ${freq.length ? `<div class="small muted" style="margin:6px 0 6px">よく使う種目（前回と同じセットで追加）</div>
+      <div class="qachips">${freq.map(e => `<button class="chip" data-action="qaPick" data-id="${e.id}">${esc(e.name)}</button>`).join('')}</div>` : ''}
+  </div>`;
+}
+function qaListHtml() {
+  const q = (state.qa || '').trim();
+  if (!q) return '';
+  const nq = baseName(q);
+  const hits = db.exercises.filter(e => baseName(e.name).includes(nq) || normTxt(e.name).includes(normTxt(q)))
+    .sort((a, b) => lastDoneDate(b.id, '9999-12-31').localeCompare(lastDoneDate(a.id, '9999-12-31'))).slice(0, 6);
+  return hits.map(e => `<button class="pickrow" data-action="qaPick" data-id="${e.id}"><span>${esc(e.name)}</span><small>${esc(e.part)}${lastDoneDate(e.id, '9999-12-31') ? ' · 前回 ' + fmtDate(lastDoneDate(e.id, '9999-12-31')) : ''}</small></button>`).join('')
+    + `<button class="pickrow" data-action="qaNew"><span>「${esc(q)}」を新しい種目として作る</span><small>＋</small></button>`;
+}
 
 /* ---------- テキストから取り込み ----------
    例）
@@ -1007,7 +1163,9 @@ function openPicker() {
     <input id="exSearch" class="search" type="search" placeholder="種目名で検索" autocomplete="off">
     <div class="chips" id="pickChips">${pickChipsHtml()}</div>
     <div id="pickList">${pickListHtml()}</div>
-    <button class="btn block ghost" data-action="newEx" data-from="picker" style="margin-top:8px">＋ 新しい種目を作る</button>`);
+    <button class="btn block ghost" data-action="newEx" data-from="picker" style="margin-top:8px">＋ 新しい種目を作る</button>
+    <div class="sheet-foot"><button class="btn primary block" id="pickDone" data-action="pickDone">完了</button></div>`);
+  modalCtx = { added: 0 };
 }
 function pickChipsHtml() {
   return ['all', ...Object.keys(CATS)].map(c =>
@@ -1017,13 +1175,13 @@ function pickListHtml() {
   const q = ($('#exSearch')?.value || '').trim().toLowerCase();
   const list = db.exercises.filter(e => (state.pickCat === 'all' || e.cat === state.pickCat) && (!q || e.name.toLowerCase().includes(q)));
   if (!list.length) return '<p class="muted small" style="padding:12px 0">該当する種目がありません</p>';
-  return Object.keys(CATS).map(c => {
+  const recent = q ? [] : list.filter(e => lastDoneDate(e.id, '9999-12-31'))
+    .sort((a, b) => lastDoneDate(b.id, '9999-12-31').localeCompare(lastDoneDate(a.id, '9999-12-31'))).slice(0, 8);
+  const row = e => { const last = lastDoneDate(e.id, '9999-12-31'); return `<button class="pickrow" data-action="pickEx" data-id="${e.id}"><span>${esc(e.name)}</span><small>${esc(e.part)}${last ? ' · 前回 ' + fmtDate(last) : ''}</small></button>`; };
+  return (recent.length ? '<div class="pickgroup">最近やった種目</div>' + recent.map(row).join('') : '') + Object.keys(CATS).map(c => {
     const g = list.filter(e => e.cat === c);
     if (!g.length) return '';
-    return `<div class="pickgroup">${CATS[c]}</div>` + g.map(e => {
-      const last = lastDoneDate(e.id, '9999-12-31');
-      return `<button class="pickrow" data-action="pickEx" data-id="${e.id}"><span>${esc(e.name)}</span><small>${esc(e.part)}${last ? ' · 前回 ' + fmtDate(last) : ''}</small></button>`;
-    }).join('');
+    return `<div class="pickgroup">${CATS[c]}</div>` + g.map(row).join('');
   }).join('');
 }
 
@@ -1642,9 +1800,9 @@ function renderSettings() {
     </div>
   `;
 }
-function exerciseForm(ex, fromPicker) {
+function exerciseForm(ex, fromPicker, presetName = '') {
   const isNew = !ex;
-  ex = ex || E('', '', 'strength', '胸', 'reps', { c1: KG });
+  ex = ex || E('', presetName, 'strength', '胸', 'reps', { c1: KG });
   const dv = ex.def || {};
   modalCtx = { exId: isNew ? null : ex.id, fromPicker };
   const opt = (obj, cur) => Object.entries(obj).map(([k, v]) => `<option value="${k}" ${k === cur ? 'selected' : ''}>${v}</option>`).join('');
@@ -1714,7 +1872,10 @@ function openModal(html) {
 }
 function closeModal() {
   const m = $('#modal');
+  if (m.hidden) return;
   m.hidden = true; m.innerHTML = '';
+  // 一覧からの連続追加やメニューでのメモ編集を画面に反映
+  if (state.view === 'today' && (modalCtx.added || modalCtx.itemId)) { modalCtx = {}; render(); }
   if ($('#timerOverlay').hidden) document.body.classList.remove('noscroll');
 }
 function formModal({ title, fields, okLabel = '保存', onOk }) {
@@ -1739,18 +1900,46 @@ const A = {
   addItem: () => openPicker(),
   pickCat: el => { state.pickCat = el.dataset.c; $('#pickChips').innerHTML = pickChipsHtml(); $('#pickList').innerHTML = pickListHtml(); },
   pickEx: el => {
+    // 一覧は閉じずに続けて追加できる
     const it = addItemToDay(el.dataset.id, state.date);
-    save(); closeModal(); render();
-    $(`[data-item="${it.id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!it) return;
+    save();
+    modalCtx.added = (modalCtx.added || 0) + 1;
+    el.classList.add('added');
+    const b = $('#pickDone'); if (b) b.textContent = `完了（${modalCtx.added}種目追加）`;
+    toast(`${exById(it.exId).name}を追加しました`);
+  },
+  pickDone: () => { closeModal(); render(); },
+  qaPick: el => {
+    const it = addItemToDay(el.dataset.id, state.date);
+    if (!it) return;
+    save(); state.qa = ''; render();
+    toast(`${exById(it.exId).name}を追加しました${historyOf(it.exId, state.date).length ? '（前回と同じセット）' : ''}`);
+  },
+  qaNew: () => { const name = state.qa; state.qa = ''; exerciseForm(null, true, name); },
+  setView: el => { db.settings.todayView = el.dataset.v; save(); render(); },
+  cellEdit: el => openCell(el.closest('[data-item]').dataset.item, +el.dataset.set),
+  cellAdd: el => {
+    const it = ctxItem(el), ex = exById(it.exId), last = it.sets[it.sets.length - 1];
+    const p = last ? { ...last.p } : { c1: ex?.def?.c1 ?? null, c2: ex?.def?.c2 ?? null, v: ex?.def?.v ?? null };
+    it.sets.push({ p, a: null, done: false }); save(); refreshItem(it.id);
+  },
+  cellDone: () => {
+    const it = findItem(modalCtx.itemId), s = it?.sets[modalCtx.set];
+    if (!s) return;
+    if (s.done) { s.done = false; s.a = null; }
+    else { readCellForm(it, s, true); s.a = { ...s.p }; s.done = true; maybeStartRest(it); }
+    save(); closeModal(); refreshItem(it.id);
+  },
+  cellDel: () => {
+    const it = findItem(modalCtx.itemId);
+    if (it.sets[modalCtx.set].done && !confirm('実績が入っています。このセットを削除しますか？')) return;
+    it.sets.splice(modalCtx.set, 1); save(); closeModal(); refreshItem(it.id);
   },
   toggleSet: el => {
-    const it = itemOf(el), idx = +el.closest('.set').dataset.set, s = it.sets[idx], ex = exById(it.exId);
+    const it = itemOf(el), idx = +el.closest('.set').dataset.set, s = it.sets[idx];
     if (s.done) { s.done = false; s.a = null; }
-    else {
-      s.a = { ...s.p }; s.done = true;
-      unlockAudio();
-      if (it.rest > 0 && ex && ex.measure !== 'time') startRest(it.rest);
-    }
+    else { s.a = { ...s.p }; s.done = true; maybeStartRest(it); }
     save(); rerenderItem(it.id); updateSummary();
   },
   delSet: el => {
@@ -1758,43 +1947,59 @@ const A = {
     if (it.sets[idx].done && !confirm('実績が入っています。このセットを削除しますか？')) return;
     it.sets.splice(idx, 1); save(); rerenderItem(it.id); updateSummary();
   },
-  addSet: el => {
-    const it = itemOf(el), ex = exById(it.exId), last = it.sets[it.sets.length - 1];
-    const p = last ? { ...last.p } : { c1: ex?.def?.c1 ?? null, c2: ex?.def?.c2 ?? null, v: ex?.def?.v ?? null };
-    it.sets.push({ p, a: null, done: false }); save(); rerenderItem(it.id); updateSummary();
+  addSet: el => A.cellAdd(el),
+  allDone: () => {
+    const it = findItem(modalCtx.itemId);
+    it.sets.forEach(s => { if (!s.done) { s.a = { ...s.p }; s.done = true; } });
+    save(); closeModal(); refreshItem(it.id); toast('全セットを完了にしました');
   },
   copyPrev: el => {
-    const it = itemOf(el), prev = historyOf(it.exId, state.date)[0];
+    const it = ctxItem(el), prev = historyOf(it.exId, state.date)[0];
     if (!prev) return;
     if (it.sets.some(s => s.done) && !confirm('入力済みの実績があります。前回の内容で置き換えますか？')) return;
     it.sets = cloneSetsAsPlan(prev.item.sets.filter(s => s.done));
     it.rest = prev.item.rest ?? it.rest;
-    save(); rerenderItem(it.id); updateSummary();
+    save(); if (!$('#modal').hidden) closeModal(); refreshItem(it.id);
     toast('前回の実績を計画に入れました');
   },
   editRest: el => {
-    const it = itemOf(el);
+    const it = ctxItem(el);
     formModal({
       title: '休憩時間', fields: [{ key: 'rest', label: 'セット間の休憩（秒）。0で休憩なし', value: it.rest, num: true }],
-      onOk: v => { it.rest = Math.max(0, Math.round(parseNum(v.rest) || 0)); save(); rerenderItem(it.id); updateSummary(); },
+      onOk: v => { it.rest = Math.max(0, Math.round(parseNum(v.rest) || 0)); save(); refreshItem(it.id); },
     });
   },
   itemMenu: el => {
-    const it = itemOf(el), ex = exById(it.exId) || MISSING_EX;
+    const it = itemOf(el), ex = exById(it.exId) || MISSING_EX, prev = historyOf(it.exId, state.date)[0];
     modalCtx = { itemId: it.id };
-    openModal(`<h2>${esc(ex.name)}</h2><div class="menu">
-      <button class="btn block" data-action="moveItem" data-d="-1">↑ 上へ移動</button>
-      <button class="btn block" data-action="moveItem" data-d="1">↓ 下へ移動</button>
-      <button class="btn block" data-action="editRestAfter">この種目の後のレスト${it.restAfter > 0 ? `（${fmtDur(it.restAfter)}）` : ''}</button>
-      ${exById(it.exId) ? `<button class="btn block" data-action="editEx" data-id="${it.exId}">種目の設定を編集</button>` : ''}
-      <button class="btn block danger" data-action="delItem">この種目を今日の計画から外す</button>
-      <button class="btn block ghost" data-action="closeModal">閉じる</button></div>`);
+    const allDone = it.sets.length && it.sets.every(s => s.done);
+    openModal(`<h2>${esc(ex.name)}</h2>
+      <p class="small muted" style="margin:-6px 0 4px">${prev ? `前回 ${fmtDate(prev.date)}：${esc(fmtSets(ex, prev.item.sets, true))}` : '前回の記録なし'}</p>
+      ${prev?.item.memo ? `<p class="prevmemo" style="margin:0 0 4px">前回のメモ：${esc(prev.item.memo)}</p>` : ''}
+      <div class="menu" style="margin-top:12px">
+      ${allDone ? '' : '<button class="btn primary block" data-action="allDone">✓ 全セットを計画どおり完了</button>'}
+      ${prev ? '<button class="btn block" data-action="copyPrev">↺ 前回と同じセットにする</button>' : ''}
+      ${ex.measure === 'time' ? '<button class="btn block" data-action="itemTimer">⏱ タイマーで実施</button>' : ''}
+      <div class="row2" style="margin-top:8px">
+        <button class="btn block" data-action="editRest">${it.rest > 0 ? `セット間 ${fmtDur(it.rest)}` : 'セット間休憩なし'}</button>
+        <button class="btn block" data-action="editRestAfter">${it.restAfter > 0 ? `後のレスト ${fmtDur(it.restAfter)}` : '後のレストなし'}</button>
+      </div>
+      <div class="field" style="margin:8px 0 0"><label class="fieldlbl" for="menuMemo">メモ</label>
+        <textarea id="menuMemo" class="note" style="min-height:60px" data-input="memoModal" placeholder="フォームの注意、次回へのメモなど">${esc(it.memo || '')}</textarea></div>
+      <div class="row2">
+        <button class="btn block" data-action="moveItem" data-d="-1">↑ 上へ</button>
+        <button class="btn block" data-action="moveItem" data-d="1">↓ 下へ</button>
+      </div>
+      ${exById(it.exId) ? `<button class="btn block ghost" data-action="editEx" data-id="${it.exId}">種目の設定（条件・単位）を編集</button>` : ''}
+      <button class="btn block ghost danger" data-action="delItem">この種目を外す</button>
+      <button class="btn block ghost" data-action="closeMenu">閉じる</button></div>`);
   },
-  editRestAfter: () => {
-    const it = findItem(modalCtx.itemId);
+  closeMenu: () => { closeModal(); render(); },
+  editRestAfter: el => {
+    const it = ctxItem(el);
     formModal({
       title: 'この種目の後のレスト', fields: [{ key: 'm', label: '分（サーキットの区切りなど。0でなし）', value: it.restAfter ? r2(it.restAfter / 60) : 0, num: true }],
-      onOk: v => { it.restAfter = Math.max(0, Math.round((parseNum(v.m) || 0) * 60)); save(); rerenderItem(it.id); },
+      onOk: v => { it.restAfter = Math.max(0, Math.round((parseNum(v.m) || 0) * 60)); save(); refreshItem(it.id); },
     });
   },
   restAfterStart: el => { const it = itemOf(el); unlockAudio(); startRest(it.restAfter); },
@@ -1802,7 +2007,7 @@ const A = {
   impApply: () => applyImport(),
   moveItem: el => {
     const s = sessionOf(state.date), i = s.items.findIndex(x => x.id === modalCtx.itemId), j = i + +el.dataset.d;
-    if (j < 0 || j >= s.items.length) { closeModal(); return; }
+    if (j < 0 || j >= s.items.length) { closeModal(); render(); return; }
     [s.items[i], s.items[j]] = [s.items[j], s.items[i]];
     save(); closeModal(); render();
   },
@@ -1814,9 +2019,10 @@ const A = {
     save(); closeModal(); render();
   },
   itemTimer: el => {
-    const it = itemOf(el), ex = exById(it.exId), phases = [{ type: 'prep', dur: 10 }];
+    const it = ctxItem(el), ex = exById(it.exId), phases = [{ type: 'prep', dur: 10 }];
     const sets = it.sets.filter(s => !s.done);
     if (!sets.length) { toast('すべてのセットが完了しています'); return; }
+    if (!$('#modal').hidden) closeModal();
     sets.forEach((s, i) => {
       phases.push({ type: 'work', dur: s.p.v || 0, round: i + 1, rounds: sets.length, sets: 1 });
       if (i < sets.length - 1 && it.rest > 0) phases.push({ type: 'rest', dur: it.rest, round: i + 1, rounds: sets.length, sets: 1 });
@@ -1944,6 +2150,8 @@ document.addEventListener('input', e => {
   if (el.matches('[data-input="note"]')) { const s = ensureSession(state.date); s.note = el.value; save(); return; }
   if (el.matches('[data-input="memo"]')) { const it = itemOf(el); if (it) { it.memo = el.value; save(); } return; }
   if (el.id === 'impText') { renderImportPreview(); return; }
+  if (el.id === 'qaInput') { state.qa = el.value; $('#qaList').innerHTML = qaListHtml(); return; }
+  if (el.matches('[data-input="memoModal"]')) { const it = findItem(modalCtx.itemId); if (it) { it.memo = el.value; save(); } return; }
   if (el.id === 'exSearch') { $('#pickList').innerHTML = pickListHtml(); return; }
   if (el.matches('[data-tk]')) { const v = parseNum(el.value); if (v != null) { setTimerCfg(el.dataset.tk, v); $('#tTotal').textContent = fmtDur(timerTotal(db.settings.timer)); } return; }
   if (el.dataset.setting === 'volume') { db.settings.volume = +el.value; save(); return; }
@@ -1974,6 +2182,12 @@ document.addEventListener('change', e => {
 document.addEventListener('submit', e => {
   e.preventDefault();
   if (e.target.id === 'exForm') return saveExerciseForm(e.target);
+  if (e.target.id === 'cellForm') {
+    const it = findItem(modalCtx.itemId), st = it?.sets[modalCtx.set];
+    if (st) { readCellForm(it, st, false); save(); }
+    closeModal(); if (it) refreshItem(it.id);
+    return;
+  }
   if (e.target.id === 'mform') {
     const vals = Object.fromEntries(new FormData(e.target).entries());
     const cb = modalCtx.onOk;
@@ -1983,6 +2197,7 @@ document.addEventListener('submit', e => {
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !$('#modal').hidden) closeModal();
+  if (e.key === 'Enter' && e.target.id === 'qaInput') { e.preventDefault(); $('#qaList .pickrow')?.click(); return; }
   // 入力欄で Enter を押したら次の入力欄へ
   if (e.key === 'Enter' && e.target.matches('.in')) {
     e.preventDefault();
