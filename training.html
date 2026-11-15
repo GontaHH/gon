@@ -469,6 +469,7 @@ function E(id, name, cat, part, measure, o = {}) {
 }
 const DEFAULT_EXERCISES = [
   E('bench', 'ベンチプレス', 'strength', '胸', 'reps', { c1: KG, mets: 5, def: { c1: 40, v: 10 } }),
+  E('bench_feetup', '足上げベンチプレス', 'strength', '胸', 'reps', { c1: KG, mets: 5, def: { c1: 40, v: 10 } }),
   E('dbpress', 'ダンベルプレス', 'strength', '胸', 'reps', { c1: KG, mets: 5, def: { c1: 12, v: 10 } }),
   E('pushup', '腕立て伏せ', 'strength', '胸', 'reps', { mets: 3.8, def: { v: 15 }, rest: 60 }),
   E('squat', 'スクワット', 'strength', '脚', 'reps', { c1: KG, mets: 5, def: { c1: 40, v: 10 } }),
@@ -540,9 +541,12 @@ function migrate(d) {
   d.exercises = d.exercises || f.exercises;
   d.removedDefaults = d.removedDefaults || [];
   // 後から増えた標準種目を追加（ユーザーが削除したものは除く）
-  for (const def of DEFAULT_EXERCISES) {
-    if (!d.exercises.some(e => e.id === def.id) && !d.removedDefaults.includes(def.id)) d.exercises.push(JSON.parse(JSON.stringify(def)));
-  }
+  DEFAULT_EXERCISES.forEach((def, i) => {
+    if (d.exercises.some(e => e.id === def.id) || d.removedDefaults.includes(def.id)) return;
+    // 標準の並び順どおり、直前の標準種目のすぐ後ろに入れる
+    const prevId = DEFAULT_EXERCISES[i - 1]?.id, at = d.exercises.findIndex(e => e.id === prevId);
+    d.exercises.splice(at >= 0 ? at + 1 : d.exercises.length, 0, JSON.parse(JSON.stringify(def)));
+  });
   if ((d.version || 1) < 2) {
     const bike = d.exercises.find(e => e.id === 'bike');
     if (bike && !bike.c2) bike.c2 = { label: '回転数', unit: 'rpm' };
