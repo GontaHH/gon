@@ -162,6 +162,19 @@
   .item-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
   .item-foot .kcal { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .actions { margin: 4px 0 16px; }
+  .prevmemo { font-size: 13px; color: var(--warn); margin: -4px 0 8px; }
+  .memo-in { display: block; width: 100%; min-height: 40px; margin-top: 10px; padding: 8px 12px; resize: none; line-height: 1.45; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font-size: 16px; }
+  .memo-in::placeholder { color: var(--faint); font-size: 14px; }
+  .memo-in:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .restafter { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 10px -14px -14px; padding: 10px 14px; background: rgba(61, 139, 255, .12); border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius); color: #c8dbff; font-size: 14px; }
+  .imp-row { padding: 10px 0; border-top: 1px solid var(--line); }
+  .imp-row:first-child { border-top: 0; }
+  .imp-row .nm { font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+  .imp-row .nm small { font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .imp-row .nm small.new { color: var(--warn); }
+  .imp-row .sets, .imp-row .memo { font-size: 14px; font-variant-numeric: tabular-nums; }
+  .imp-row .memo { color: var(--muted); font-size: 13px; }
+  .imp-warn { font-size: 13px; color: var(--warn); margin-top: 8px; }
 
   /* ---------- modal ---------- */
   #modal { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .6); display: flex; align-items: flex-end; justify-content: center; }
@@ -423,15 +436,20 @@ const DEFAULT_EXERCISES = [
   E('latraise', 'サイドレイズ', 'strength', '肩', 'reps', { c1: KG, mets: 3.5, def: { c1: 5, v: 12 }, rest: 60 }),
   E('curl', 'アームカール', 'strength', '腕', 'reps', { c1: KG, mets: 3.5, def: { c1: 8, v: 10 }, rest: 60 }),
   E('triceps', 'トライセプスエクステンション', 'strength', '腕', 'reps', { c1: KG, mets: 3.5, def: { c1: 8, v: 10 }, rest: 60 }),
+  E('pressdown', 'プレスダウン', 'strength', '腕', 'reps', { c1: KG, mets: 3.5, def: { c1: 20, v: 10 }, rest: 60 }),
+  E('bbcurl', 'バーベルカール', 'strength', '腕', 'reps', { c1: KG, mets: 3.5, def: { c1: 20, v: 10 }, rest: 60 }),
+  E('seatedrow', 'シーテッドローイング', 'strength', '背中', 'reps', { c1: KG, mets: 4, def: { c1: 30, v: 10 } }),
   E('plank', 'プランク', 'strength', '体幹', 'time', { mets: 3.8, def: { v: 60 }, rest: 45 }),
   E('crunch', 'クランチ', 'strength', '体幹', 'reps', { mets: 3.8, def: { v: 20 }, rest: 45 }),
   E('treadmill', 'トレッドミル', 'cardio', '有酸素', 'time', { tu: 'min', c1: { label: '速度', unit: 'km/h' }, c2: { label: '傾斜', unit: '%' }, mets: 5, calc: 'treadmill', def: { c1: 5.5, c2: 8, v: 1800 } }),
-  E('bike', 'エアロバイク', 'cardio', '有酸素', 'time', { tu: 'min', c1: { label: '負荷', unit: 'Lv' }, mets: 6.8, def: { c1: 5, v: 1800 } }),
+  E('treadmill_d', 'トレッドミル（距離）', 'cardio', '有酸素', 'dist', { c1: { label: '速度', unit: 'km/h' }, c2: { label: '傾斜', unit: '%' }, mets: 9, calc: 'treadmill', def: { c1: 10, c2: 5, v: 400 } }),
+  E('bike', 'エアロバイク', 'cardio', '有酸素', 'time', { tu: 'min', c1: { label: '負荷', unit: 'Lv' }, c2: { label: '回転数', unit: 'rpm' }, mets: 6.8, def: { c1: 5, v: 1800 } }),
   E('run', 'ラン', 'cardio', '有酸素', 'dist', { mets: 9.8, pace: 36, def: { v: 1000 } }),
   E('burpee', 'バーピー', 'hiit', '全身', 'time', { mets: 8, def: { v: 20 } }),
   E('mclimber', 'マウンテンクライマー', 'hiit', '全身', 'time', { mets: 8, def: { v: 20 } }),
   E('jumpsquat', 'ジャンプスクワット', 'hiit', '脚', 'time', { mets: 8, def: { v: 20 } }),
   E('highknee', 'もも上げ（ハイニー）', 'hiit', '全身', 'time', { mets: 8, def: { v: 20 } }),
+  E('burpee_r', 'バーピー（回数）', 'hiit', '全身', 'reps', { mets: 8, def: { v: 15 }, rest: 60 }),
   E('kbswing', 'ケトルベルスイング', 'hiit', '全身', 'time', { c1: KG, mets: 9.8, def: { c1: 12, v: 20 } }),
   E('ski', 'スキーエルゴ', 'hyrox', '全身', 'dist', { mets: 7, pace: 28, def: { v: 500 } }),
   E('row', 'ローイング', 'hyrox', '全身', 'dist', { mets: 7, pace: 26, def: { v: 500 } }),
@@ -456,7 +474,8 @@ const TIMER_PRESETS = [
 const KEY = 'trainingApp.v1';
 function fresh() {
   return {
-    version: 1,
+    version: 2,
+    removedDefaults: [],
     exercises: JSON.parse(JSON.stringify(DEFAULT_EXERCISES)),
     sessions: [],
     settings: {
@@ -474,6 +493,16 @@ function migrate(d) {
   d.settings.presets = d.settings.presets || [];
   d.sessions = d.sessions || [];
   d.exercises = d.exercises || f.exercises;
+  d.removedDefaults = d.removedDefaults || [];
+  // 後から増えた標準種目を追加（ユーザーが削除したものは除く）
+  for (const def of DEFAULT_EXERCISES) {
+    if (!d.exercises.some(e => e.id === def.id) && !d.removedDefaults.includes(def.id)) d.exercises.push(JSON.parse(JSON.stringify(def)));
+  }
+  if ((d.version || 1) < 2) {
+    const bike = d.exercises.find(e => e.id === 'bike');
+    if (bike && !bike.c2) bike.c2 = { label: '回転数', unit: 'rpm' };
+    d.version = 2;
+  }
   return d;
 }
 function load() {
@@ -580,15 +609,14 @@ function setKcal(ex, rest, vals, kg) {
   // 回数種目：動作時間＋セット間休憩をまとめて種目METsで計算（筋トレのMETsは休憩込みの平均値のため）
   if (ex.measure === 'reps') return k(ex.mets, v * db.settings.secPerRep + rest);
   const restK = rest > 0 ? k(2.0, rest) : 0; // インターバル休憩は2.0METsで計算
-  if (ex.measure === 'time') {
-    if (ex.calc === 'treadmill' && vals.c1 > 0) {
-      // ACSMの歩行・走行式 VO2(ml/kg/分)。5kcal/L O2 で換算
-      const S = vals.c1 * 1000 / 60, G = (+vals.c2 || 0) / 100;
-      const vo2 = vals.c1 < 8 ? 0.1 * S + 1.8 * S * G + 3.5 : 0.2 * S + 0.9 * S * G + 3.5;
-      return vo2 * kg / 1000 * 5 * (v / 60) + restK;
-    }
-    return k(ex.mets, v) + restK;
+  if (ex.calc === 'treadmill' && vals.c1 > 0) {
+    // ACSMの歩行・走行式 VO2(ml/kg/分)。5kcal/L O2 で換算。距離の場合は速度から時間を出す
+    const sec = ex.measure === 'dist' ? v / (vals.c1 / 3.6) : v;
+    const S = vals.c1 * 1000 / 60, G = (+vals.c2 || 0) / 100;
+    const vo2 = vals.c1 < 8 ? 0.1 * S + 1.8 * S * G + 3.5 : 0.2 * S + 0.9 * S * G + 3.5;
+    return vo2 * kg / 1000 * 5 * (sec / 60) + restK;
   }
+  if (ex.measure === 'time') return k(ex.mets, v) + restK;
   return k(ex.mets, v / 100 * (ex.pace || 40)) + restK; // 距離
 }
 function itemKcal(item, date, mode) {
@@ -691,9 +719,10 @@ function renderToday() {
     <div class="actions">
       <button class="btn primary block" data-action="addItem">＋ 種目を追加</button>
       <div class="row2">
+        <button class="btn block" data-action="importText">テキストから取り込み</button>
         <button class="btn block" data-action="copyDay">他の日からコピー</button>
-        <button class="btn block" data-action="go" data-view="rec">おすすめから作る</button>
       </div>
+      <button class="btn block" data-action="go" data-view="rec" style="margin-top:10px">おすすめから作る</button>
     </div>
     ${s ? `
       <div class="card">
@@ -733,6 +762,7 @@ function renderItem(it, d) {
       <button class="iconbtn" data-action="itemMenu" aria-label="種目メニュー">⋯</button>
     </div>
     <div class="prev">${prev ? `前回 ${fmtDate(prev.date)}：${esc(fmtSets(ex, prev.item.sets, true))}` : '前回の記録なし'}</div>
+    ${prev?.item.memo ? `<div class="prevmemo">前回のメモ：${esc(prev.item.memo)}</div>` : ''}
     <div class="item-tools">
       <button class="btn small" data-action="copyPrev" ${prev ? '' : 'disabled'}>↺ 前回と同じ</button>
       <button class="btn small ghost" data-action="editRest">${it.rest > 0 ? `休憩 ${fmtDur(it.rest)}` : '休憩なし'}</button>
@@ -740,10 +770,12 @@ function renderItem(it, d) {
     </div>
     <div class="set-grid set-head"><span></span>${head.map(h => `<span>${h}</span>`).join('')}<span></span></div>
     ${it.sets.map((s, i) => renderSet(ex, s, i, fields)).join('')}
+    <textarea class="memo-in" data-input="memo" rows="${Math.min(4, Math.max(1, Math.ceil((it.memo || '').length / 20)))}" placeholder="メモ（フォームの注意、次回へのメモなど）" aria-label="種目のメモ">${esc(it.memo || '')}</textarea>
     <div class="item-foot">
       <button class="btn small ghost" data-action="addSet">＋ セット追加</button>
       <span class="kcal" data-kcal>${kcalText(it, d)}</span>
     </div>
+    ${it.restAfter > 0 ? `<div class="restafter"><span>この後レスト <b>${fmtDur(it.restAfter)}</b></span><button class="btn small" data-action="restAfterStart">▶ 開始</button></div>` : ''}
   </section>`;
 }
 function kcalText(it, d) { return `実績 ${nfmt(itemKcal(it, d, 'actual'))} / 計画 ${nfmt(itemKcal(it, d, 'plan'))} kcal`; }
@@ -807,6 +839,166 @@ function addItemToDay(exId, date) {
   return it;
 }
 const cloneSetsAsPlan = sets => sets.map(s => ({ p: { ...(s.done ? actualVals(s) : s.p) }, a: null, done: false }));
+
+/* ---------- テキストから取り込み ----------
+   例）
+     ベンチプレス        ← 種目名の行
+     60×10              ← 重さ×回数（×セット数も可）。後ろの文字はメモ
+     80×6 足上げ
+     1. トレッドミル走 400m（傾斜12.5、スピード12.5）  ← 1行で種目・量・条件
+     ーー（レスト5分）ーー  ← 直前の種目の後のレスト
+*/
+const SYN = [['バービー', 'バーピー'], ['スピード', '速度'], ['レベル', '負荷'], ['ロードバイク', 'バイク'], ['エアロバイク', 'バイク'], ['ケーブル', '']];
+const normTxt = t => String(t || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
+const applySyn = t => SYN.reduce((acc, [a, b]) => acc.split(normTxt(a)).join(normTxt(b)), t);
+const baseName = t => applySyn(normTxt(t).replace(/\([^)]*\)/g, ''));
+const UNIT_MEASURE = { km: 'dist', m: 'dist', '回': 'reps', rep: 'reps', reps: 'reps', '分': 'time', min: 'time', '秒': 'time' };
+
+function findExercise(name, measure) {
+  let q = baseName(name);
+  const cands = db.exercises.map(e => ({ e, b: baseName(e.name) }));
+  const pick = qq => {
+    let m = cands.filter(c => c.b === qq);
+    if (!m.length) m = cands.filter(c => c.b.length >= 2 && qq.length >= 2 && (qq.includes(c.b) || c.b.includes(qq)));
+    m = m.filter(c => c.e.measure === measure);
+    return m.sort((a, b) => (b.b === qq) - (a.b === qq) || b.b.length - a.b.length)[0]?.e || null;
+  };
+  return pick(q) || (q.endsWith('走') ? pick(q.slice(0, -1)) : null);
+}
+function parseMenuText(text) {
+  const N = '(\\d+(?:\\.\\d+)?)';
+  const setRe = new RegExp(`^${N}\\s*(?:kg)?\\s*[×x*✕]\\s*${N}\\s*(?:回|reps?)?(?:\\s*[×x*✕]\\s*${N}\\s*(?:セット|sets?)?)?[.。]?\\s*(.*)$`, 'i');
+  const bwRe = new RegExp(`^(?:自重\\s*[×x*✕]?\\s*)?${N}\\s*回(?:\\s*[×x*✕]\\s*${N}\\s*(?:セット|sets?)?)?[.。]?\\s*(.*)$`, 'i');
+  const restRe = /^[ー\-ｰ―—=~〜_\s(]*(?:レスト|休憩|インターバル|rest)[^\d]*(\d+(?:\.\d+)?)\s*(分|秒|min|s)/i;
+  const out = [], skipped = [];
+  let cur = null;
+  for (const raw of text.normalize('NFKC').split(/\r?\n/)) {
+    let line = raw.trim();
+    if (!line || /^[ー\-ｰ―—=~〜_.\s]+$/.test(line)) continue;
+    const rm = line.match(restRe);
+    if (rm) {
+      if (out.length) out[out.length - 1].restAfter = Math.round(parseFloat(rm[1]) * (/分|min/i.test(rm[2]) ? 60 : 1));
+      continue;
+    }
+    line = line.replace(/^(?:\d+[.)]|[・•●○◯▶►*\-])\s+/, '').trim();
+    let m = line.match(setRe);
+    if (m && cur) {
+      const n = Math.min(20, Math.max(1, parseInt(m[3] || '1', 10)));
+      for (let i = 0; i < n; i++) cur.sets.push({ c1: parseFloat(m[1]), v: parseFloat(m[2]) });
+      if (m[4].trim()) cur.memos.push(`${cur.sets.length}セット目 ${m[4].trim()}`);
+      continue;
+    }
+    m = line.match(bwRe);
+    if (m && cur) {
+      const n = Math.min(20, Math.max(1, parseInt(m[2] || '1', 10)));
+      for (let i = 0; i < n; i++) cur.sets.push({ c1: null, v: parseFloat(m[1]) });
+      if (m[3].trim()) cur.memos.push(`${cur.sets.length}セット目 ${m[3].trim()}`);
+      continue;
+    }
+    // 種目の行
+    const [body, ...arrow] = line.split(/←|⇐|<-/);
+    const conds = [];
+    let rest = body.replace(/\(([^)]*)\)/g, (_, c) => { conds.push(c); return ' '; });
+    const am = rest.match(/(\d+(?:\.\d+)?)\s*(km|min|reps?|m|回|分|秒)(?![a-z])/i);
+    let name = am ? rest.slice(0, am.index) : rest;
+    name = name.replace(/[:：]\s*$/, '').trim();
+    if (!name) { skipped.push(raw.trim()); continue; }
+    cur = {
+      name, amount: am ? parseFloat(am[1]) : null, unit: am ? am[2].toLowerCase() : null,
+      tokens: conds.flatMap(c => c.split(/[、,/]/)).map(t => t.trim()).filter(Boolean),
+      memos: arrow.length ? [arrow.join(' ').trim()] : [], sets: [], restAfter: 0, raw: raw.trim(),
+    };
+    out.push(cur);
+  }
+  return { entries: out, skipped };
+}
+function buildImport(text) {
+  const { entries, skipped } = parseMenuText(text);
+  const plan = [], newByName = {};
+  for (const p of entries) {
+    if (!p.sets.length && p.amount == null) { skipped.push(p.raw); continue; }
+    const measure = p.sets.length ? 'reps' : (UNIT_MEASURE[p.unit] || 'reps');
+    let ex = findExercise(p.name, measure), isNew = false;
+    const tok = p.tokens.map(t => {
+      const m = t.match(/^(.*?)(\d+(?:\.\d+)?)\s*([a-z%]*)(.*)$/i);
+      return m ? { t, label: applySyn(normTxt(m[1].replace(/で\s*$/, ''))), rawLabel: m[1].replace(/で\s*$/, '').trim(), num: parseFloat(m[2]), unit: m[3].toLowerCase(), tail: m[4].trim() } : { t };
+    });
+    if (!ex) {
+      const key = normTxt(p.name) + '|' + measure;
+      ex = newByName[key];
+      if (!ex) {
+        // 見つからない種目は新しく作る
+        const weighted = p.sets.some(s => s.c1 != null) || tok.some(x => x.unit === 'kg');
+        const cs = weighted ? [KG] : tok.filter(x => x.num != null).slice(0, 2).map(x => ({ label: x.rawLabel || '条件', unit: x.unit }));
+        ex = E(uid(), p.name, measure === 'reps' && weighted ? 'strength' : measure === 'reps' ? 'hiit' : 'cardio', '全身', measure,
+          { c1: cs[0] || null, c2: cs[1] || null, tu: measure === 'time' && p.unit !== '秒' ? 'min' : 'sec', mets: weighted ? 4 : 6, pace: measure === 'dist' ? 40 : null, rest: weighted ? 90 : 0 });
+        newByName[key] = ex; isNew = true;
+      }
+    }
+    let sets;
+    if (p.sets.length) sets = p.sets.map(x => ({ c1: ex.c1 ? x.c1 : null, c2: null, v: x.v }));
+    else {
+      const mul = p.unit === 'km' ? 1000 : (p.unit === '分' || p.unit === 'min') ? 60 : 1;
+      sets = [{ c1: null, c2: null, v: Math.round(p.amount * mul * 100) / 100 }];
+    }
+    const memo = [...p.memos];
+    for (const x of tok) {
+      if (x.num == null) { memo.push(x.t); continue; }
+      const f = ['c1', 'c2'].find(k => {
+        const c = ex[k];
+        if (!c) return false;
+        if (x.unit && normTxt(c.unit) === x.unit) return true;
+        const cl = applySyn(normTxt(c.label));
+        return !!x.label && !!cl && (x.label.includes(cl) || cl.includes(x.label));
+      });
+      if (f) { sets.forEach(st => { if (st[f] == null) st[f] = x.num; }); if (x.tail) memo.push(x.t); }
+      else memo.push(x.t);
+    }
+    plan.push({ ex, isNew: isNew || !db.exercises.includes(ex), sets, memo: memo.join(' / '), restAfter: p.restAfter });
+  }
+  return { plan, skipped };
+}
+function openImport() {
+  const past = state.date <= today();
+  openModal(`
+    <h2>テキストから取り込み</h2>
+    <p class="small muted" style="margin-bottom:10px">メモアプリのメニューをそのまま貼り付けてください。「60×10」はセット、「400m（傾斜12.5、スピード12.5）」は量と条件、「レスト5分」は直前の種目の後のレストとして読み取ります。</p>
+    <textarea id="impText" class="note" style="min-height:180px" placeholder="ベンチプレス&#10;60×10&#10;80×6&#10;&#10;1. トレッドミル走 400m（傾斜12.5、スピード12.5）&#10;2. バーピー 20回"></textarea>
+    <div class="field" style="margin:10px 0 0"><label class="check-row"><input type="checkbox" id="impDone" ${past ? 'checked' : ''}>やり終えた記録として入れる（オフなら計画として入れる）</label></div>
+    <div id="impPreview" class="card" style="margin-top:10px" hidden></div>
+    <div class="row2">
+      <button class="btn ghost" data-action="closeModal">キャンセル</button>
+      <button class="btn primary" data-action="impApply" id="impBtn" disabled>取り込む</button>
+    </div>`);
+}
+function renderImportPreview() {
+  const box = $('#impPreview'), btn = $('#impBtn');
+  const { plan, skipped } = buildImport($('#impText').value);
+  box.hidden = !plan.length && !skipped.length;
+  btn.disabled = !plan.length;
+  btn.textContent = plan.length ? `${plan.length}種目を${fmtDate(state.date)}に取り込む` : '取り込む';
+  box.innerHTML = plan.map(x => `
+    <div class="imp-row">
+      <div class="nm"><span>${esc(x.ex.name)}</span>${x.isNew ? '<small class="new">新しい種目として追加</small>' : '<small>登録済みの種目</small>'}</div>
+      <div class="sets">${esc(fmtSets(x.ex, x.sets.map(p => ({ p })), false))}</div>
+      ${x.memo ? `<div class="memo">メモ：${esc(x.memo)}</div>` : ''}
+      ${x.restAfter ? `<div class="memo">この後レスト ${fmtDur(x.restAfter)}</div>` : ''}
+    </div>`).join('') + (skipped.length ? `<div class="imp-warn">読み取れなかった行：${esc(skipped.join('、'))}</div>` : '');
+}
+function applyImport() {
+  const { plan } = buildImport($('#impText').value);
+  if (!plan.length) return;
+  const done = $('#impDone').checked, s = ensureSession(state.date);
+  for (const x of plan) {
+    if (!db.exercises.includes(x.ex)) db.exercises.push(x.ex);
+    s.items.push({
+      id: uid(), exId: x.ex.id, rest: x.ex.rest ?? 0, memo: x.memo, restAfter: x.restAfter || 0,
+      sets: x.sets.map(p => ({ p: { ...p }, a: done ? { ...p } : null, done })),
+    });
+  }
+  save(); closeModal(); render();
+  toast(`${plan.length}種目を取り込みました`);
+}
 
 /* ---------- 種目選択モーダル ---------- */
 function openPicker() {
@@ -884,29 +1076,42 @@ const prevText = (ex, h) => `前回 ${fmtDate(h.date)}「${fmtSets(ex, h.item.se
 
 function progStrength(ex, date) {
   const h = historyOf(ex.id, date), d = ex.def || {};
-  let n = 3, c1 = d.c1 ?? null, c2 = d.c2 ?? null, v = d.v ?? 10, rest = ex.rest ?? 90;
-  let reason = ex.c1 ? '初めての種目なので初期値で提案（重さは調整してください）' : '初めての種目なので初期値で提案';
-  if (h.length) {
-    const last = h[0].item, p0 = last.sets[0].p, done = last.sets.filter(s => s.done);
-    n = Math.min(5, Math.max(3, last.sets.length)); v = p0.v ?? v; c2 = p0.c2 ?? c2; rest = last.rest ?? rest;
-    const planC1 = p0.c1 ?? null;
-    const maxC1 = done.length ? Math.max(...done.map(s => actualVals(s).c1 || 0)) : (planC1 || 0);
-    const ok = itemSuccess(last), ok2 = h[1] ? itemSuccess(h[1].item) : true;
-    const pt = prevText(ex, h[0]);
-    c1 = planC1;
-    if (ok) {
-      if (ex.c1 && maxC1 > 0) {
-        const inc = ex.c1.unit === 'kg' && maxC1 >= 20 ? 2.5 : 1;
-        c1 = r2(Math.max(maxC1, planC1 || 0) + inc);
-        reason = `${pt} を全セット達成 → +${inc}${ex.c1.unit}`;
-      } else if (ex.measure === 'time') { v += 10; reason = `${pt} を全セット達成 → +10秒`; }
-      else { v += 1; reason = `${pt} を全セット達成 → +1回`; }
-    } else if (!ok2) {
-      if (ex.c1 && planC1 > 0) { c1 = roundW(planC1 * 0.9); reason = `${pt}、2回続けて未達 → 約10%軽くして立て直し`; }
-      else { v = Math.max(1, v - (ex.measure === 'time' ? 10 : 2)); reason = `${pt}、2回続けて未達 → 目標を少し下げる`; }
-    } else reason = `${pt} は未達のセットあり → 同じ負荷で再挑戦`;
+  if (!h.length) {
+    const reason = ex.c1 ? '初めての種目なので初期値で提案（重さは調整してください）' : '初めての種目なので初期値で提案';
+    return mkItem(ex, rep(3, { c1: d.c1 ?? null, c2: d.c2 ?? null, v: d.v ?? 10 }), ex.rest ?? 90, reason);
   }
-  return mkItem(ex, rep(n, { c1, c2, v }), rest, reason);
+  // セットごとに前回の値を土台にするので、ピラミッドやドロップセットの形はそのまま残る
+  const last = h[0].item, rest = last.rest ?? ex.rest ?? 90;
+  const ok = itemSuccess(last), ok2 = h[1] ? itemSuccess(h[1].item) : true;
+  const pt = prevText(ex, h[0]);
+  const weighted = ex.c1 && last.sets.some(s => (s.p.c1 || 0) > 0);
+  let sets, reason;
+  if (ok) {
+    const done = last.sets.map(s => actualVals(s));
+    if (weighted) {
+      const incOf = w => ex.c1.unit === 'kg' && w >= 20 ? 2.5 : 1;
+      sets = done.map(b => ({ ...b, c1: b.c1 > 0 ? r2(b.c1 + incOf(b.c1)) : b.c1 }));
+      const incs = [...new Set(done.filter(b => b.c1 > 0).map(b => incOf(b.c1)))].sort((a, b) => a - b);
+      reason = `${pt} を全セット達成 → 各セット +${incs.join('〜')}${ex.c1.unit}`;
+    } else {
+      const inc = ex.measure === 'time' ? 10 : 1;
+      sets = done.map(b => ({ ...b, v: (b.v || 0) + inc }));
+      reason = `${pt} を全セット達成 → 各セット +${inc}${ex.measure === 'time' ? '秒' : '回'}`;
+    }
+  } else if (!ok2) {
+    const plan = last.sets.map(s => ({ ...s.p }));
+    if (weighted) {
+      sets = plan.map(b => ({ ...b, c1: b.c1 > 0 ? roundW(b.c1 * 0.9) : b.c1 }));
+      reason = `${pt}、2回続けて未達 → 約10%軽くして立て直し`;
+    } else {
+      sets = plan.map(b => ({ ...b, v: Math.max(1, (b.v || 0) - (ex.measure === 'time' ? 10 : 2)) }));
+      reason = `${pt}、2回続けて未達 → 目標を少し下げる`;
+    }
+  } else {
+    sets = last.sets.map(s => ({ ...s.p }));
+    reason = `${pt} は未達のセットあり → 同じ計画で再挑戦`;
+  }
+  return mkItem(ex, sets, rest, reason);
 }
 function recStrength(date) {
   const pool = db.exercises.filter(e => e.cat === 'strength');
@@ -1580,10 +1785,21 @@ const A = {
     openModal(`<h2>${esc(ex.name)}</h2><div class="menu">
       <button class="btn block" data-action="moveItem" data-d="-1">↑ 上へ移動</button>
       <button class="btn block" data-action="moveItem" data-d="1">↓ 下へ移動</button>
+      <button class="btn block" data-action="editRestAfter">この種目の後のレスト${it.restAfter > 0 ? `（${fmtDur(it.restAfter)}）` : ''}</button>
       ${exById(it.exId) ? `<button class="btn block" data-action="editEx" data-id="${it.exId}">種目の設定を編集</button>` : ''}
       <button class="btn block danger" data-action="delItem">この種目を今日の計画から外す</button>
       <button class="btn block ghost" data-action="closeModal">閉じる</button></div>`);
   },
+  editRestAfter: () => {
+    const it = findItem(modalCtx.itemId);
+    formModal({
+      title: 'この種目の後のレスト', fields: [{ key: 'm', label: '分（サーキットの区切りなど。0でなし）', value: it.restAfter ? r2(it.restAfter / 60) : 0, num: true }],
+      onOk: v => { it.restAfter = Math.max(0, Math.round((parseNum(v.m) || 0) * 60)); save(); rerenderItem(it.id); },
+    });
+  },
+  restAfterStart: el => { const it = itemOf(el); unlockAudio(); startRest(it.restAfter); },
+  importText: () => openImport(),
+  impApply: () => applyImport(),
   moveItem: el => {
     const s = sessionOf(state.date), i = s.items.findIndex(x => x.id === modalCtx.itemId), j = i + +el.dataset.d;
     if (j < 0 || j >= s.items.length) { closeModal(); return; }
@@ -1627,7 +1843,7 @@ const A = {
   },
   copyFrom: el => {
     const src = db.sessions.find(s => s.id === el.dataset.id), dst = ensureSession(state.date);
-    src.items.forEach(it => dst.items.push({ id: uid(), exId: it.exId, rest: it.rest, sets: cloneSetsAsPlan(it.sets) }));
+    src.items.forEach(it => dst.items.push({ id: uid(), exId: it.exId, rest: it.rest, restAfter: it.restAfter || 0, sets: cloneSetsAsPlan(it.sets) }));
     save(); closeModal(); render(); toast(`${fmtDate(src.date)}のメニューをコピーしました`);
   },
   deleteDay: () => {
@@ -1697,6 +1913,7 @@ const A = {
     const id = modalCtx.exId;
     if (db.sessions.some(s => s.items.some(i => i.exId === id))) { toast('記録で使われている種目は削除できません'); return; }
     if (!confirm('この種目を削除しますか？')) return;
+    if (DEFAULT_EXERCISES.some(e => e.id === id)) db.removedDefaults.push(id);
     db.exercises = db.exercises.filter(e => e.id !== id); save(); closeModal(); render();
   },
   exportData: () => {
@@ -1725,6 +1942,8 @@ document.addEventListener('input', e => {
   const el = e.target;
   if (el.matches('.in[data-f]')) return onSetInput(el);
   if (el.matches('[data-input="note"]')) { const s = ensureSession(state.date); s.note = el.value; save(); return; }
+  if (el.matches('[data-input="memo"]')) { const it = itemOf(el); if (it) { it.memo = el.value; save(); } return; }
+  if (el.id === 'impText') { renderImportPreview(); return; }
   if (el.id === 'exSearch') { $('#pickList').innerHTML = pickListHtml(); return; }
   if (el.matches('[data-tk]')) { const v = parseNum(el.value); if (v != null) { setTimerCfg(el.dataset.tk, v); $('#tTotal').textContent = fmtDur(timerTotal(db.settings.timer)); } return; }
   if (el.dataset.setting === 'volume') { db.settings.volume = +el.value; save(); return; }
