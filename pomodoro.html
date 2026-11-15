@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ポモドーロタイマー</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;
+      background: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #eee;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.05em;
+      color: #e94560;
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .mode-btn {
+      padding: 0.5rem 1.2rem;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      background: #16213e;
+      color: #aaa;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: #e94560;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .timer-container {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      margin-bottom: 2rem;
+    }
+
+    .timer-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .timer-bg {
+      fill: none;
+      stroke: #16213e;
+      stroke-width: 12;
+    }
+
+    .timer-progress {
+      fill: none;
+      stroke: #e94560;
+      stroke-width: 12;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear, stroke 0.4s;
+    }
+
+    .timer-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .time-display {
+      font-size: 3.5rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      line-height: 1;
+    }
+
+    .mode-label {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-top: 0.4rem;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      padding: 0.7rem 2rem;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #e94560;
+      color: #fff;
+      min-width: 120px;
+    }
+
+    .btn-primary:hover {
+      background: #c73652;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #16213e;
+      color: #aaa;
+    }
+
+    .btn-secondary:hover {
+      background: #0f3460;
+      color: #fff;
+    }
+
+    .session-info {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      font-size: 0.95rem;
+      color: #aaa;
+    }
+
+    .tomato-icons {
+      display: flex;
+      gap: 0.3rem;
+    }
+
+    .tomato {
+      font-size: 1.2rem;
+      filter: grayscale(1) opacity(0.4);
+      transition: filter 0.3s;
+    }
+
+    .tomato.done {
+      filter: none;
+    }
+
+    .settings-panel {
+      margin-top: 2rem;
+      background: #16213e;
+      border-radius: 1rem;
+      padding: 1.2rem 1.5rem;
+      width: 300px;
+    }
+
+    .settings-panel summary {
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #aaa;
+      user-select: none;
+    }
+
+    .settings-panel summary:hover {
+      color: #fff;
+    }
+
+    .settings-grid {
+      margin-top: 1rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+
+    .setting-item label {
+      display: block;
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 0.3rem;
+    }
+
+    .setting-item input {
+      width: 100%;
+      padding: 0.4rem 0.6rem;
+      border-radius: 0.4rem;
+      border: 1px solid #0f3460;
+      background: #1a1a2e;
+      color: #eee;
+      font-size: 0.95rem;
+    }
+
+    .setting-item input:focus {
+      outline: none;
+      border-color: #e94560;
+    }
+
+    .apply-btn {
+      margin-top: 0.8rem;
+      width: 100%;
+      padding: 0.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      background: #e94560;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .apply-btn:hover {
+      background: #c73652;
+    }
+
+    .notification-bar {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: #e94560;
+      color: #fff;
+      padding: 0.8rem 2rem;
+      border-radius: 999px;
+      font-weight: bold;
+      font-size: 1rem;
+      transition: transform 0.4s ease;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .notification-bar.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Break mode colors */
+    body.break-mode .timer-progress { stroke: #0fd99a; }
+    body.break-mode .btn-primary { background: #0fd99a; color: #1a1a2e; }
+    body.break-mode .btn-primary:hover { background: #0bbf85; }
+    body.break-mode h1 { color: #0fd99a; }
+    body.break-mode .notification-bar { background: #0fd99a; color: #1a1a2e; }
+    body.break-mode .apply-btn { background: #0fd99a; color: #1a1a2e; }
+    body.break-mode .mode-btn.active { background: #0fd99a; color: #1a1a2e; }
+  </style>
+</head>
+<body>
+  <div class="notification-bar" id="notification">お知らせ</div>
+
+  <h1>🍅 ポモドーロタイマー</h1>
+
+  <div class="mode-tabs">
+    <button class="mode-btn active" data-mode="pomodoro">作業</button>
+    <button class="mode-btn" data-mode="short">小休憩</button>
+    <button class="mode-btn" data-mode="long">長休憩</button>
+  </div>
+
+  <div class="timer-container">
+    <svg class="timer-svg" viewBox="0 0 120 120">
+      <circle class="timer-bg" cx="60" cy="60" r="54" />
+      <circle class="timer-progress" id="progress" cx="60" cy="60" r="54" />
+    </svg>
+    <div class="timer-text">
+      <div class="time-display" id="timeDisplay">25:00</div>
+      <div class="mode-label" id="modeLabel">作業時間</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn btn-secondary" id="resetBtn">リセット</button>
+    <button class="btn btn-primary" id="startBtn">スタート</button>
+    <button class="btn btn-secondary" id="skipBtn">スキップ</button>
+  </div>
+
+  <div class="session-info">
+    <span>セッション</span>
+    <div class="tomato-icons" id="tomatoIcons">
+      <span class="tomato" data-index="0">🍅</span>
+      <span class="tomato" data-index="1">🍅</span>
+      <span class="tomato" data-index="2">🍅</span>
+      <span class="tomato" data-index="3">🍅</span>
+    </div>
+    <span id="sessionCount">0 / 4</span>
+  </div>
+
+  <details class="settings-panel">
+    <summary>⚙️ 設定</summary>
+    <div class="settings-grid">
+      <div class="setting-item">
+        <label>作業時間 (分)</label>
+        <input type="number" id="setPomo" value="25" min="1" max="60">
+      </div>
+      <div class="setting-item">
+        <label>小休憩 (分)</label>
+        <input type="number" id="setShort" value="5" min="1" max="30">
+      </div>
+      <div class="setting-item">
+        <label>長休憩 (分)</label>
+        <input type="number" id="setLong" value="15" min="1" max="60">
+      </div>
+      <div class="setting-item">
+        <label>長休憩まで</label>
+        <input type="number" id="setLongAfter" value="4" min="2" max="8">
+      </div>
+    </div>
+    <button class="apply-btn" id="applySettings">適用</button>
+  </details>
+
+  <script>
+    // ---- Config ----
+    let config = {
+      pomodoro: 25,
+      short: 5,
+      long: 15,
+      longAfter: 4,
+    };
+
+    const MODES = {
+      pomodoro: { label: '作業時間', key: 'pomodoro' },
+      short:    { label: '小休憩',   key: 'short' },
+      long:     { label: '長休憩',   key: 'long' },
+    };
+
+    // ---- State ----
+    let currentMode = 'pomodoro';
+    let totalSeconds = config.pomodoro * 60;
+    let remainingSeconds = totalSeconds;
+    let isRunning = false;
+    let intervalId = null;
+    let completedPomodoros = 0;
+
+    // ---- Elements ----
+    const timeDisplay  = document.getElementById('timeDisplay');
+    const modeLabel    = document.getElementById('modeLabel');
+    const startBtn     = document.getElementById('startBtn');
+    const resetBtn     = document.getElementById('resetBtn');
+    const skipBtn      = document.getElementById('skipBtn');
+    const progress     = document.getElementById('progress');
+    const tomatoIcons  = document.getElementById('tomatoIcons');
+    const sessionCount = document.getElementById('sessionCount');
+    const notification = document.getElementById('notification');
+    const modeBtns     = document.querySelectorAll('.mode-btn');
+
+    const CIRCUMFERENCE = 2 * Math.PI * 54; // r=54
+    progress.style.strokeDasharray = CIRCUMFERENCE;
+
+    // ---- Audio ----
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    function beep(freq = 880, duration = 0.15, vol = 0.3) {
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    }
+
+    function playFinish() {
+      [880, 1100, 1320].forEach((f, i) => setTimeout(() => beep(f, 0.25, 0.4), i * 280));
+    }
+
+    // ---- Helpers ----
+    function formatTime(s) {
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    function updateDisplay() {
+      timeDisplay.textContent = formatTime(remainingSeconds);
+      const ratio = remainingSeconds / totalSeconds;
+      progress.style.strokeDashoffset = CIRCUMFERENCE * (1 - ratio);
+    }
+
+    function updateTomatoes() {
+      const icons = tomatoIcons.querySelectorAll('.tomato');
+      icons.forEach((el, i) => {
+        el.classList.toggle('done', i < (completedPomodoros % config.longAfter));
+      });
+      sessionCount.textContent = `${completedPomodoros} / ${config.longAfter}`;
+    }
+
+    function showNotification(msg) {
+      notification.textContent = msg;
+      notification.classList.add('show');
+      setTimeout(() => notification.classList.remove('show'), 3000);
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      totalSeconds = config[MODES[mode].key] * 60;
+      remainingSeconds = totalSeconds;
+      isRunning = false;
+      clearInterval(intervalId);
+      startBtn.textContent = 'スタート';
+
+      modeLabel.textContent = MODES[mode].label;
+      document.title = `${formatTime(remainingSeconds)} - ポモドーロ`;
+
+      modeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
+
+      const isBreak = mode !== 'pomodoro';
+      document.body.classList.toggle('break-mode', isBreak);
+
+      updateDisplay();
+    }
+
+    function tick() {
+      if (remainingSeconds <= 0) {
+        clearInterval(intervalId);
+        isRunning = false;
+        startBtn.textContent = 'スタート';
+        playFinish();
+        handleFinish();
+        return;
+      }
+      remainingSeconds--;
+      updateDisplay();
+      document.title = `${formatTime(remainingSeconds)} - ポモドーロ`;
+    }
+
+    function handleFinish() {
+      if (currentMode === 'pomodoro') {
+        completedPomodoros++;
+        updateTomatoes();
+        const isLong = completedPomodoros % config.longAfter === 0;
+        showNotification(isLong ? '🎉 お疲れさまでした！長休憩しましょう' : '✅ 作業完了！少し休みましょう');
+        setMode(isLong ? 'long' : 'short');
+      } else {
+        showNotification('☕ 休憩終了！次の作業を始めましょう');
+        setMode('pomodoro');
+      }
+    }
+
+    // ---- Controls ----
+    startBtn.addEventListener('click', () => {
+      if (isRunning) {
+        clearInterval(intervalId);
+        isRunning = false;
+        startBtn.textContent = 'スタート';
+        beep(660, 0.1);
+      } else {
+        isRunning = true;
+        startBtn.textContent = '一時停止';
+        intervalId = setInterval(tick, 1000);
+        beep(880, 0.1);
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearInterval(intervalId);
+      isRunning = false;
+      startBtn.textContent = 'スタート';
+      remainingSeconds = totalSeconds;
+      updateDisplay();
+      document.title = `${formatTime(remainingSeconds)} - ポモドーロ`;
+      beep(550, 0.1);
+    });
+
+    skipBtn.addEventListener('click', () => {
+      clearInterval(intervalId);
+      isRunning = false;
+      startBtn.textContent = 'スタート';
+      handleFinish();
+      beep(770, 0.1);
+    });
+
+    modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => setMode(btn.dataset.mode));
+    });
+
+    // ---- Settings ----
+    document.getElementById('applySettings').addEventListener('click', () => {
+      const newPomo      = parseInt(document.getElementById('setPomo').value);
+      const newShort     = parseInt(document.getElementById('setShort').value);
+      const newLong      = parseInt(document.getElementById('setLong').value);
+      const newLongAfter = parseInt(document.getElementById('setLongAfter').value);
+
+      if ([newPomo, newShort, newLong, newLongAfter].some(isNaN)) return;
+
+      config.pomodoro  = newPomo;
+      config.short     = newShort;
+      config.long      = newLong;
+      config.longAfter = newLongAfter;
+
+      // Rebuild tomato icons
+      tomatoIcons.innerHTML = Array.from({ length: newLongAfter },
+        (_, i) => `<span class="tomato" data-index="${i}">🍅</span>`).join('');
+
+      completedPomodoros = 0;
+      updateTomatoes();
+      setMode(currentMode);
+      showNotification('⚙️ 設定を適用しました');
+    });
+
+    // ---- Init ----
+    setMode('pomodoro');
+    updateTomatoes();
+  </script>
+</body>
+</html>
