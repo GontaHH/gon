@@ -459,11 +459,14 @@ function E(id, name, cat, part, measure, o = {}) {
   return {
     id, name, cat, part, measure,
     tu: o.tu || 'sec',               // 時間の入力単位（sec | min）
+    du: o.du || null,                // 距離の入力単位（m | km）
+    vu: o.vu || null,                // 回数の単位表記（例：歩）
+    pacePer: o.pacePer || null,      // ペース表示（km | 100m | kmh）
     c1: o.c1 || null, c2: o.c2 || null,
     mets: o.mets || 4,
     def: o.def || {},                // 初期値 {c1,c2,v}（v: 回数 / 秒 / m）
     pace: o.pace || null,            // 距離種目: 100mあたりの秒数（カロリー計算用）
-    calc: o.calc || null,            // 'treadmill' のときACSM式で計算
+    calc: o.calc || null,            // treadmill | run | cycle | steps（カロリー計算の方式）
     rest: o.rest ?? (cat === 'strength' ? 90 : cat === 'hiit' ? 10 : 0),
   };
 }
@@ -490,7 +493,11 @@ const DEFAULT_EXERCISES = [
   E('treadmill', 'トレッドミル', 'cardio', '有酸素', 'time', { tu: 'min', c1: { label: '速度', unit: 'km/h' }, c2: { label: '傾斜', unit: '%' }, mets: 5, calc: 'treadmill', def: { c1: 5.5, c2: 8, v: 1800 } }),
   E('treadmill_d', 'トレッドミル（距離）', 'cardio', '有酸素', 'dist', { c1: { label: '速度', unit: 'km/h' }, c2: { label: '傾斜', unit: '%' }, mets: 9, calc: 'treadmill', def: { c1: 10, c2: 5, v: 400 } }),
   E('bike', 'エアロバイク', 'cardio', '有酸素', 'time', { tu: 'min', c1: { label: '負荷', unit: 'Lv' }, c2: { label: '回転数', unit: 'rpm' }, mets: 6.8, def: { c1: 5, v: 1800 } }),
-  E('run', 'ラン', 'cardio', '有酸素', 'dist', { mets: 9.8, pace: 36, def: { v: 1000 } }),
+  E('run', 'ランニング', 'cardio', '有酸素', 'dist', { du: 'km', c1: { label: 'タイム', unit: '分:秒' }, mets: 9.8, pace: 36, calc: 'run', def: { v: 5000 } }),
+  E('walk', 'ウォーキング', 'cardio', '有酸素', 'dist', { du: 'km', c1: { label: 'タイム', unit: '分:秒' }, mets: 3.5, pace: 80, calc: 'run', def: { v: 3000 } }),
+  E('cycle', 'サイクリング', 'cardio', '有酸素', 'dist', { du: 'km', c1: { label: 'タイム', unit: '分:秒' }, mets: 6.8, pace: 20, calc: 'cycle', pacePer: 'kmh', def: { v: 20000 } }),
+  E('swim', '水泳', 'cardio', '有酸素', 'dist', { c1: { label: 'タイム', unit: '分:秒' }, mets: 7, pace: 150, pacePer: '100m', def: { v: 500 } }),
+  E('steps', '歩数', 'cardio', '有酸素', 'reps', { vu: '歩', mets: 3.5, calc: 'steps' }),
   E('burpee', 'バーピー', 'hiit', '全身', 'time', { mets: 8, def: { v: 20 } }),
   E('mclimber', 'マウンテンクライマー', 'hiit', '全身', 'time', { mets: 8, def: { v: 20 } }),
   E('jumpsquat', 'ジャンプスクワット', 'hiit', '脚', 'time', { mets: 8, def: { v: 20 } }),
@@ -520,7 +527,7 @@ const TIMER_PRESETS = [
 const KEY = 'trainingApp.v1';
 function fresh() {
   return {
-    version: 2,
+    version: 3,
     removedDefaults: [],
     exercises: JSON.parse(JSON.stringify(DEFAULT_EXERCISES)),
     sessions: [],
@@ -547,11 +554,19 @@ function migrate(d) {
     const prevId = DEFAULT_EXERCISES[i - 1]?.id, at = d.exercises.findIndex(e => e.id === prevId);
     d.exercises.splice(at >= 0 ? at + 1 : d.exercises.length, 0, JSON.parse(JSON.stringify(def)));
   });
+  if ((d.version || 1) < 3) {
+    // ランニングを「距離＋タイム」で記録できるようにする
+    const run = d.exercises.find(e => e.id === 'run');
+    if (run && !run.c1) {
+      Object.assign(run, { c1: { label: 'タイム', unit: '分:秒' }, du: 'km', calc: 'run' });
+      if (run.name === 'ラン') run.name = 'ランニング';
+    }
+  }
   if ((d.version || 1) < 2) {
     const bike = d.exercises.find(e => e.id === 'bike');
     if (bike && !bike.c2) bike.c2 = { label: '回転数', unit: 'rpm' };
-    d.version = 2;
   }
+  d.version = 3;
   return d;
 }
 function load() {
@@ -611,25 +626,68 @@ function itemSuccess(item) {
 }
 
 /* ---------- 単位と表示 ---------- */
-const vUnit = ex => ex.measure === 'reps' ? '回' : ex.measure === 'dist' ? 'm' : (ex.tu === 'min' ? '分' : '秒');
 const isMin = ex => ex.measure === 'time' && ex.tu === 'min';
-const toIn = (ex, v) => v == null ? '' : String(isMin(ex) ? r2(v / 60) : r2(v));
-const fromIn = (ex, x) => isMin(ex) ? Math.round(x * 60) : x;
+const isKm = ex => ex.measure === 'dist' && ex.du === 'km';
+const vUnit = ex => ex.measure === 'reps' ? (ex.vu || '回') : ex.measure === 'dist' ? (isKm(ex) ? 'km' : 'm') : (ex.tu === 'min' ? '分' : '秒');
+const toIn = (ex, v) => v == null ? '' : String(isMin(ex) ? r2(v / 60) : isKm(ex) ? r2(v / 1000) : r2(v));
+const fromIn = (ex, x) => isMin(ex) ? Math.round(x * 60) : isKm(ex) ? Math.round(x * 1000) : x;
+/* 「分:秒」の条件（ランのタイムなど）。秒で保存し、25:30 / 1:05:00 で表示 */
+const isTimeCond = c => c?.unit === '分:秒';
+const timeField = ex => ['c1', 'c2'].find(f => isTimeCond(ex?.[f]));
+function parseClock(str) {
+  const t = String(str ?? '').normalize('NFKC').replace(/\s+/g, '');
+  if (!t) return null;
+  let m = t.match(/^(?:(\d+)時間)?(?:(\d+)分)?(?:(\d+)秒)?$/);
+  if (m && (m[1] || m[2] || m[3])) return (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0);
+  if (/^\d+([:.]\d+){1,2}$/.test(t)) return t.split(/[:.]/).map(Number).reduce((acc, x) => acc * 60 + x, 0);
+  if (!/^\d+$/.test(t)) return null;
+  // 数字だけなら 2530 → 25:30、10000 → 1:00:00、25 → 25分
+  if (t.length <= 2) return +t * 60;
+  const sec = +t.slice(-2), rest = t.slice(0, -2);
+  return rest.length <= 2 ? +rest * 60 + sec : +rest.slice(0, -2) * 3600 + +rest.slice(-2) * 60 + sec;
+}
+function fmtClk(sec) {
+  sec = Math.round(sec);
+  const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  return h ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+}
+function fieldToIn(ex, f, val) {
+  if (val == null) return '';
+  if (f === 'v') return toIn(ex, val);
+  return isTimeCond(ex[f]) ? fmtClk(val) : fmtIn(val);
+}
+function fieldFromIn(ex, f, str) {
+  if (f !== 'v' && isTimeCond(ex[f])) return parseClock(str);
+  const x = parseNum(str);
+  return x == null ? null : (f === 'v' ? fromIn(ex, x) : x);
+}
+function paceStr(ex, vals) {
+  const tf = timeField(ex), sec = vals?.[tf], dist = vals?.v;
+  if (!tf || ex.measure !== 'dist' || !(sec > 0) || !(dist > 0)) return '';
+  if (ex.pacePer === 'kmh') return `${r2(Math.round(dist / 1000 / (sec / 3600) * 10) / 10)}km/h`;
+  const per = Math.round(ex.pacePer === '100m' ? sec / (dist / 100) : sec / (dist / 1000));
+  return `${Math.floor(per / 60)}'${pad(per % 60)}"/${ex.pacePer === '100m' ? '100m' : 'km'}`;
+}
 function fmtV(ex, v) {
   if (v == null) return '–';
-  if (ex.measure === 'reps') return `${r2(v)}回`;
+  if (ex.measure === 'reps') return `${r2(v)}${ex.vu || '回'}`;
   if (ex.measure === 'dist') return v >= 1000 ? `${r2(v / 1000)}km` : `${r2(v)}m`;
   return fmtDur(v);
 }
 function condStr(ex, vals) {
   const p = [];
-  if (ex.c1 && vals.c1 != null) p.push(vals.c1 === 0 && ex.c1.unit === 'kg' ? '自重' : `${r2(vals.c1)}${ex.c1.unit}`);
-  if (ex.c2 && vals.c2 != null) p.push(`${ex.c2.label}${r2(vals.c2)}${ex.c2.unit}`);
+  if (ex.c1 && vals.c1 != null) p.push(isTimeCond(ex.c1) ? fmtClk(vals.c1) : vals.c1 === 0 && ex.c1.unit === 'kg' ? '自重' : `${r2(vals.c1)}${ex.c1.unit}`);
+  if (ex.c2 && vals.c2 != null) p.push(isTimeCond(ex.c2) ? fmtClk(vals.c2) : `${ex.c2.label}${r2(vals.c2)}${ex.c2.unit}`);
   return p.join(' ');
 }
 function fmtSets(ex, sets, actual) {
   const list = sets.filter(s => !actual || s.done).map(s => actual ? actualVals(s) : s.p);
   if (!list.length) return '';
+  const tf = timeField(ex);
+  if (tf && ex.measure === 'dist') {
+    // 距離＋タイム：5.2km 26:00（5'00"/km）
+    return list.map(v => [v.v != null ? fmtV(ex, v.v) : '', v[tf] > 0 ? fmtClk(v[tf]) : '', paceStr(ex, v) ? `（${paceStr(ex, v)}）` : ''].filter(Boolean).join(' ')).join(', ');
+  }
   const conds = list.map(v => condStr(ex, v));
   if (conds.every(c => c === conds[0])) {
     const vs = list.map(v => fmtV(ex, v.v));
@@ -653,11 +711,31 @@ function weightOn(date) {
 const hasWeight = () => db.settings.weights.length > 0;
 function setKcal(ex, rest, vals, kg) {
   const v = +vals?.v;
-  if (!v || v <= 0) return 0;
   const k = (mets, sec) => mets * kg * (sec / 3600) * 1.05;
+  if (!v || v <= 0) {
+    // 距離なし・タイムだけ（「ランニング 30分」など）は種目のMETsで計算
+    const tf = timeField(ex);
+    return ex.measure === 'dist' && tf && vals?.[tf] > 0 ? k(ex.mets, vals[tf]) : 0;
+  }
+  if (ex.calc === 'steps') return v * 0.00035 * kg; // 歩数：1歩あたり約0.35kcal/kg/1000歩
   // 回数種目：動作時間＋セット間休憩をまとめて種目METsで計算（筋トレのMETsは休憩込みの平均値のため）
   if (ex.measure === 'reps') return k(ex.mets, v * db.settings.secPerRep + rest);
   const restK = rest > 0 ? k(2.0, rest) : 0; // インターバル休憩は2.0METsで計算
+  const tf = timeField(ex);
+  if (ex.measure === 'dist' && tf && vals[tf] > 0) {
+    // 距離とタイムがあれば速度から計算
+    const sec = vals[tf];
+    if (ex.calc === 'run') {
+      const S = v / (sec / 60); // m/分
+      const vo2 = S < 134 ? 0.1 * S + 3.5 : 0.2 * S + 3.5; // ACSM 歩行／走行
+      return vo2 * kg / 1000 * 5 * (sec / 60) + restK;
+    }
+    if (ex.calc === 'cycle') {
+      const kmh = v / 1000 / (sec / 3600);
+      return k(kmh < 16 ? 4 : kmh < 19 ? 6.8 : kmh < 22 ? 8 : kmh < 25 ? 10 : 12, sec) + restK;
+    }
+    return k(ex.mets, sec) + restK;
+  }
   if (ex.calc === 'treadmill' && vals.c1 > 0) {
     // ACSMの歩行・走行式 VO2(ml/kg/分)。5kcal/L O2 で換算。距離の場合は速度から時間を出す
     const sec = ex.measure === 'dist' ? v / (vals.c1 / 3.6) : v;
@@ -667,6 +745,25 @@ function setKcal(ex, rest, vals, kg) {
   }
   if (ex.measure === 'time') return k(ex.mets, v) + restK;
   return k(ex.mets, v / 100 * (ex.pace || 40)) + restK; // 距離
+}
+/** 運動時間（秒）の目安。回数種目は休憩込み */
+function setSec(ex, rest, vals) {
+  const v = +vals?.v;
+  if (!v || v <= 0) { const tf = timeField(ex); return ex.measure === 'dist' && tf && vals?.[tf] > 0 ? vals[tf] : 0; }
+  if (ex.calc === 'steps') return v * 0.6;
+  if (ex.measure === 'reps') return v * db.settings.secPerRep + rest;
+  if (ex.measure === 'time') return v + rest;
+  const tf = timeField(ex);
+  if (tf && vals[tf] > 0) return vals[tf] + rest;
+  if (ex.calc === 'treadmill' && vals.c1 > 0) return v / (vals.c1 / 3.6) + rest;
+  return v / 100 * (ex.pace || 40) + rest;
+}
+/** 移動距離（m）。距離種目と、速度つきのトレッドミル（時間） */
+function setDist(ex, vals) {
+  if (ex.measure === 'dist') return +vals.v || 0;
+  if (ex.calc === 'treadmill' && ex.measure === 'time' && vals.c1 > 0) return vals.c1 / 3.6 * (+vals.v || 0);
+  if (ex.calc === 'steps') return (+vals.v || 0) * 0.7;
+  return 0;
 }
 function itemKcal(item, date, mode) {
   const ex = exById(item.exId);
@@ -799,7 +896,11 @@ function summaryHtml() {
 function updateSummary() { const el = $('#summary'); if (el) el.innerHTML = summaryHtml(); }
 
 const MISSING_EX = { name: '（削除された種目）', measure: 'reps', c1: null, c2: null, cat: 'strength', tu: 'sec' };
-function itemFields(ex) { return [ex.c1 && 'c1', ex.c2 && 'c2', 'v'].filter(Boolean); }
+function itemFields(ex) {
+  // 距離＋タイムの種目は「距離 → タイム」の順に並べる
+  if (ex.measure === 'dist' && timeField(ex)) return ['v', ex.c1 && 'c1', ex.c2 && 'c2'].filter(Boolean);
+  return [ex.c1 && 'c1', ex.c2 && 'c2', 'v'].filter(Boolean);
+}
 function renderEditList(items) {
   return `<div class="editlist">${items.map((it, i) => {
     const ex = exById(it.exId) || MISSING_EX;
@@ -857,15 +958,21 @@ function cellText(ex, v) {
     if (v.c1 == null || (v.c1 === 0 && ex.c1.unit === 'kg')) return { main: `${num(v.v)}回`, sub: v.c1 === 0 ? '自重' : '' };
     return { main: `${num(v.c1)}×${num(v.v)}`, sub: '' };
   }
+  const tf = timeField(ex);
+  if (tf && ex.measure === 'dist' && v.v == null && v[tf] > 0) return { main: fmtClk(v[tf]), sub: '' };
+  if (tf && ex.measure === 'dist') return { main: v.v == null ? '?' : v.v >= 1000 || isKm(ex) ? `${r2(v.v / 1000)}km` : `${r2(v.v)}m`, sub: v[tf] > 0 ? fmtClk(v[tf]) : '' };
   let main;
-  if (ex.measure === 'reps') main = `${num(v.v)}回`;
+  if (ex.measure === 'reps') main = v.v == null ? '?' : v.v >= 10000 ? `${r2(v.v / 1000)}k${ex.vu || '回'}` : `${num(v.v)}${ex.vu || '回'}`;
   else if (ex.measure === 'dist') main = v.v == null ? '–' : v.v >= 1000 ? `${r2(v.v / 1000)}km` : `${r2(v.v)}m`;
   else main = v.v == null ? '–' : isMin(ex) ? `${r2(v.v / 60)}分` : (v.v >= 60 && v.v % 60 === 0 ? `${v.v / 60}分` : `${v.v}秒`);
-  const sub = [ex.c1 && v.c1 != null ? num(v.c1) : null, ex.c2 && v.c2 != null ? num(v.c2) : null].filter(x => x != null).join('/');
+  const cv = f => ex[f] && v[f] != null ? (isTimeCond(ex[f]) ? fmtClk(v[f]) : num(v[f])) : null;
+  const sub = [cv('c1'), cv('c2')].filter(x => x != null).join('/');
   return { main, sub };
 }
 function unitHint(ex) {
   if (ex.measure === 'reps' && ex.c1 && !ex.c2) return `${ex.c1.unit}×回`;
+  if (ex.measure === 'dist' && timeField(ex)) return `${vUnit(ex)}・タイム`;
+  if (ex.vu) return ex.vu;
   const cs = [ex.c1, ex.c2].filter(Boolean).map(c => c.label);
   return (cs.length ? cs.join('/') + ' · ' : '') + MEASURES[ex.measure];
 }
@@ -895,7 +1002,7 @@ function openCell(itemId, idx) {
   modalCtx = { itemId, set: idx };
   const fields = itemFields(ex);
   const lbl = f => f === 'v' ? `${MEASURES[ex.measure]}(${vUnit(ex)})` : `${esc(ex[f].label)}(${esc(ex[f].unit)})`;
-  const show = (vals, f) => f === 'v' ? toIn(ex, vals.v) : fmtIn(vals[f]);
+  const show = (vals, f) => fieldToIn(ex, f, vals[f]);
   const av = s.done ? actualVals(s) : null;
   openModal(`
     <h2>${esc(ex.name)}　<span class="muted">セット${idx + 1}</span></h2>
@@ -917,7 +1024,7 @@ function openCell(itemId, idx) {
 function readCellForm(it, s, planOnly) {
   const form = $('#cellForm'), ex = exById(it.exId);
   if (!form) return;
-  const val = (name, f) => { const x = parseNum(form.elements[name]?.value); return x == null ? null : (f === 'v' ? fromIn(ex, x) : x); };
+  const val = (name, f) => fieldFromIn(ex, f, form.elements[name]?.value);
   const fields = itemFields(ex);
   fields.forEach(f => { s.p[f] = val(`p_${f}`, f); });
   if (form.elements.toRest?.checked) it.sets.slice(modalCtx.set + 1).forEach(x => { if (!x.done) x.p = { ...s.p }; });
@@ -946,7 +1053,7 @@ function qaListHtml() {
   if (!q) return '';
   const nq = baseName(q);
   const hits = db.exercises.filter(e => baseName(e.name).includes(nq) || normTxt(e.name).includes(normTxt(q)))
-    .sort((a, b) => lastDoneDate(b.id, '9999-12-31').localeCompare(lastDoneDate(a.id, '9999-12-31'))).slice(0, 6);
+    .sort((a, b) => (baseName(b.name).startsWith(nq) - baseName(a.name).startsWith(nq)) || lastDoneDate(b.id, '9999-12-31').localeCompare(lastDoneDate(a.id, '9999-12-31'))).slice(0, 6);
   return hits.map(e => `<button class="pickrow" data-action="qaPick" data-id="${e.id}"><span>${esc(e.name)}</span><small>${esc(e.part)}${lastDoneDate(e.id, '9999-12-31') ? ' · 前回 ' + fmtDate(lastDoneDate(e.id, '9999-12-31')) : ''}</small></button>`).join('')
     + `<button class="pickrow" data-action="qaNew"><span>「${esc(q)}」を新しい種目として作る</span><small>＋</small></button>`;
 }
@@ -970,7 +1077,8 @@ function exSheetHtml() {
   const prev = historyOf(ex.id, state.date)[0];
   const fields = itemFields(ex);
   const lbl = f => f === 'v' ? `${MEASURES[ex.measure]}<br>(${vUnit(ex)})` : `${esc(ex[f].label)}<br>(${esc(ex[f].unit)})`;
-  const show = (vals, f) => vals?.[f] == null ? '' : (f === 'v' ? toIn(ex, vals.v) : fmtIn(vals[f]));
+  const show = (vals, f) => fieldToIn(ex, f, vals?.[f]);
+  const tf = timeField(ex);
   return `
     <h2>${esc(ex.name)}</h2>
     ${prev ? `<div class="shprev"><span>前回 ${fmtDate(prev.date)}：${esc(fmtSets(ex, prev.item.sets, true))}</span>
@@ -984,7 +1092,8 @@ function exSheetHtml() {
         <button type="button" class="sdone ${r.done ? 'on' : ''}" data-action="shDone" data-i="${i}" aria-pressed="${r.done}" aria-label="セット${i + 1}完了">✓</button>
         <button type="button" class="x" data-action="shDel" data-i="${i}" aria-label="セット${i + 1}を削除">×</button>`).join('')}
     </form>
-    <button class="btn block ghost" data-action="shAdd" style="margin-top:8px">＋ セットを追加</button>
+    ${tf ? '<p class="hint" style="margin:8px 0 0">タイムは「25:30」または数字だけ「2530」で入力できます（1時間超は「1:05:00」）</p>' : ''}
+    <button class="btn block ghost" data-action="shAdd" style="margin-top:8px">${ex.measure === 'dist' && tf ? '＋ 追加（インターバル・別の区間）' : '＋ セットを追加'}</button>
     <div class="row2">
       <button class="btn ghost" data-action="closeModal">キャンセル</button>
       <button class="btn primary" data-action="shSave">${it ? '保存' : '追加'}</button>
@@ -1007,8 +1116,7 @@ function syncSheet() {
   if (!sh || !form) return;
   const ex = exById(sh.exId), fields = itemFields(ex);
   sh.rows.forEach((r, i) => fields.forEach(f => {
-    const x = parseNum(form.elements[`r${i}_${f}`]?.value);
-    r.vals[f] = x == null ? null : (f === 'v' ? fromIn(ex, x) : x);
+    r.vals[f] = fieldFromIn(ex, f, form.elements[`r${i}_${f}`]?.value);
   }));
 }
 function rerenderSheet(focusRow) {
@@ -1046,14 +1154,16 @@ const SYN = [['バービー', 'バーピー'], ['スピード', '速度'], ['レ
 const normTxt = t => String(t || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
 const applySyn = t => SYN.reduce((acc, [a, b]) => acc.split(normTxt(a)).join(normTxt(b)), t);
 const baseName = t => applySyn(normTxt(t).replace(/\([^)]*\)/g, ''));
-const UNIT_MEASURE = { km: 'dist', m: 'dist', '回': 'reps', rep: 'reps', reps: 'reps', '分': 'time', min: 'time', '秒': 'time' };
+const UNIT_MEASURE = { km: 'dist', m: 'dist', '回': 'reps', rep: 'reps', reps: 'reps', '歩': 'reps', '分': 'time', min: 'time', '秒': 'time' };
+const CLOCK_RE = /\d{1,2}:\d{2}(?::\d{2})?|(?:\d+時間)?\d+分(?:\d+秒)?|\d+時間/;
 
 function findExercise(name, measure) {
   let q = baseName(name);
   const cands = db.exercises.map(e => ({ e, b: baseName(e.name) }));
   const pick = qq => {
     let m = cands.filter(c => c.b === qq);
-    if (!m.length) m = cands.filter(c => c.b.length >= 2 && qq.length >= 2 && (qq.includes(c.b) || c.b.includes(qq)));
+    // 部分一致は先頭から（「ラン」→ランニング。プランクには当てない）
+    if (!m.length) m = cands.filter(c => c.b.length >= 2 && qq.length >= 2 && (qq.startsWith(c.b) || c.b.startsWith(qq)));
     m = m.filter(c => c.e.measure === measure);
     return m.sort((a, b) => (b.b === qq) - (a.b === qq) || b.b.length - a.b.length)[0]?.e || null;
   };
@@ -1093,8 +1203,14 @@ function parseMenuText(text) {
     const [body, ...arrow] = line.split(/←|⇐|<-/);
     const conds = [];
     let rest = body.replace(/\(([^)]*)\)/g, (_, c) => { conds.push(c); return ' '; });
-    const am = rest.match(/(\d+(?:\.\d+)?)\s*(km|min|reps?|m|回|分|秒)(?![a-z])/i);
-    let name = am ? rest.slice(0, am.index) : rest;
+    // 量：距離を優先（「ランニング 26:30 5km」でも距離を量にする）
+    const am = rest.match(/(\d+(?:\.\d+)?)\s*(km|m)(?![a-z])/i) || rest.match(/(\d+(?:\.\d+)?)\s*(km|min|reps?|m|回|歩|分|秒)(?![a-z])/i);
+    let cutAt = am ? am.index : rest.length;
+    // 量以外のタイム（26:30、26分30秒）は条件として扱う
+    const noAm = am ? rest.slice(0, am.index) + ' '.repeat(am[0].length) + rest.slice(am.index + am[0].length) : rest;
+    const tm = noAm.match(CLOCK_RE);
+    if (tm) { conds.push(tm[0]); cutAt = Math.min(cutAt, tm.index); }
+    let name = rest.slice(0, cutAt);
     name = name.replace(/[:：]\s*$/, '').trim();
     if (!name) { skipped.push(raw.trim()); continue; }
     cur = {
@@ -1111,9 +1227,15 @@ function buildImport(text) {
   const plan = [], newByName = {};
   for (const p of entries) {
     if (!p.sets.length && p.amount == null) { skipped.push(p.raw); continue; }
-    const measure = p.sets.length ? 'reps' : (UNIT_MEASURE[p.unit] || 'reps');
-    let ex = findExercise(p.name, measure), isNew = false;
+    let measure = p.sets.length ? 'reps' : (UNIT_MEASURE[p.unit] || 'reps');
+    let ex = findExercise(p.name, measure), isNew = false, amountIsTime = false;
+    if (!ex && measure === 'time') {
+      // 「ランニング 30分」のように、距離種目をタイムだけで書いた場合
+      const alt = findExercise(p.name, 'dist');
+      if (alt && timeField(alt)) { ex = alt; measure = 'dist'; amountIsTime = true; }
+    }
     const tok = p.tokens.map(t => {
+      if (new RegExp(`^(?:${CLOCK_RE.source})$`).test(t.replace(/\s+/g, ''))) return { t, clock: parseClock(t) };
       const m = t.match(/^(.*?)(\d+(?:\.\d+)?)\s*([a-z%]*)(.*)$/i);
       return m ? { t, label: applySyn(normTxt(m[1].replace(/で\s*$/, ''))), rawLabel: m[1].replace(/で\s*$/, '').trim(), num: parseFloat(m[2]), unit: m[3].toLowerCase(), tail: m[4].trim() } : { t };
     });
@@ -1131,12 +1253,18 @@ function buildImport(text) {
     }
     let sets;
     if (p.sets.length) sets = p.sets.map(x => ({ c1: ex.c1 ? x.c1 : null, c2: null, v: x.v }));
+    else if (amountIsTime) sets = [{ c1: null, c2: null, v: null, [timeField(ex)]: Math.round(p.amount * ((p.unit === '分' || p.unit === 'min') ? 60 : 1)) }];
     else {
       const mul = p.unit === 'km' ? 1000 : (p.unit === '分' || p.unit === 'min') ? 60 : 1;
       sets = [{ c1: null, c2: null, v: Math.round(p.amount * mul * 100) / 100 }];
     }
     const memo = [...p.memos];
     for (const x of tok) {
+      if (x.clock != null) {
+        const tf = timeField(ex);
+        if (tf) sets.forEach(st => { if (st[tf] == null) st[tf] = x.clock; }); else memo.push(x.t);
+        continue;
+      }
       if (x.num == null) { memo.push(x.t); continue; }
       const f = ['c1', 'c2'].find(k => {
         const c = ex[k];
@@ -1448,7 +1576,7 @@ function renderRec() {
 function dayAgg() {
   const map = {};
   for (const s of db.sessions) {
-    const a = map[s.date] ||= { kcal: 0, vol: 0, sets: 0, cat: {} };
+    const a = map[s.date] ||= { kcal: 0, vol: 0, sets: 0, sec: 0, dist: 0, cat: {} };
     for (const it of s.items) {
       const ex = exById(it.exId);
       if (!ex) continue;
@@ -1459,6 +1587,8 @@ function dayAgg() {
         a.sets++;
         const v = actualVals(st);
         if (ex.measure === 'reps' && ex.c1?.unit === 'kg') a.vol += (v.c1 || 0) * (v.v || 0);
+        a.sec += setSec(ex, it.rest || 0, v);
+        a.dist += setDist(ex, v);
       }
     }
   }
@@ -1470,10 +1600,10 @@ function periodRange(mode, anchor, offset) {
   return { start: ymd(f), end: ymd(l), label: `${f.getMonth() + 1}月` };
 }
 function aggRange(map, r) {
-  const out = { kcal: 0, vol: 0, sets: 0, days: 0, cat: {} };
+  const out = { kcal: 0, vol: 0, sets: 0, days: 0, sec: 0, dist: 0, cat: {} };
   for (const [d, a] of Object.entries(map)) {
     if (d < r.start || d > r.end) continue;
-    out.kcal += a.kcal; out.vol += a.vol; out.sets += a.sets;
+    out.kcal += a.kcal; out.vol += a.vol; out.sets += a.sets; out.sec += a.sec; out.dist += a.dist;
     if (a.sets > 0) out.days++;
     for (const [c, k] of Object.entries(a.cat)) out.cat[c] = (out.cat[c] || 0) + k;
   }
@@ -1500,6 +1630,8 @@ function renderStats() {
       <div class="kpis">
         <div><div class="k muted">トレーニング日数</div><div class="v">${cur.days}日</div></div>
         <div><div class="k muted">完了セット</div><div class="v">${cur.sets}</div></div>
+        <div><div class="k muted">運動時間</div><div class="v">${fmtHM(cur.sec)}</div></div>
+        <div><div class="k muted">距離</div><div class="v">${r2(Math.round(cur.dist / 100) / 10)}km</div></div>
         <div><div class="k muted">挙上ボリューム</div><div class="v">${nfmt(cur.vol)}kg</div></div>
       </div>
       ${hasWeight() ? '' : '<p class="small muted" style="margin-top:10px">※体重が未設定のため60kgで計算しています。設定から登録できます。</p>'}
@@ -1524,6 +1656,7 @@ function renderStats() {
     <p class="small muted">カロリーは「METs × 体重 × 時間 × 1.05」で計算した推定値です。</p>
   `;
 }
+function fmtHM(sec) { const m = Math.round(sec / 60); return m >= 60 ? `${Math.floor(m / 60)}時間${m % 60}分` : `${m}分`; }
 function niceMax(v) {
   if (v <= 0) return 1;
   const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p;
@@ -1609,12 +1742,22 @@ function drawStatsCharts() {
   if (ec && ex) {
     const h = historyOf(ex.id, '9999-12-31').reverse().slice(-20);
     let label, fmt, val;
-    if (ex.c1?.unit === 'kg' && h.some(x => x.item.sets.some(s => s.done && actualVals(s).c1 > 0))) {
+    const tf = timeField(ex);
+    if (ex.measure === 'dist' && tf && ex.pacePer !== 'kmh' && h.some(x => x.item.sets.some(s => s.done && actualVals(s)[tf] > 0))) {
+      const per = ex.pacePer === '100m' ? 100 : 1000;
+      label = `ペース（分/${per === 100 ? '100m' : 'km'}・下がるほど速い）`;
+      fmt = v => `${Math.floor(v)}'${pad(Math.round(v % 1 * 60))}"`;
+      val = it => {
+        const ds = it.sets.filter(s => s.done).map(actualVals).filter(v => v[tf] > 0 && v.v > 0);
+        const sec = ds.reduce((t, v) => t + v[tf], 0), dist = ds.reduce((t, v) => t + v.v, 0);
+        return dist ? sec / (dist / per) / 60 : 0;
+      };
+    } else if (ex.c1?.unit === 'kg' && h.some(x => x.item.sets.some(s => s.done && actualVals(s).c1 > 0))) {
       label = '最大重量（kg）'; fmt = v => `${r2(v)}kg`;
       val = it => Math.max(0, ...it.sets.filter(s => s.done).map(s => actualVals(s).c1 || 0));
     } else {
       label = `合計${MEASURES[ex.measure]}（${ex.measure === 'time' ? (ex.tu === 'min' ? '分' : '秒') : vUnit(ex)}）`;
-      const div = isMin(ex) ? 60 : 1;
+      const div = isMin(ex) ? 60 : isKm(ex) ? 1000 : 1;
       fmt = v => fmtV(ex, v * div);
       val = it => it.sets.filter(s => s.done).reduce((t, s) => t + (actualVals(s).v || 0), 0) / div;
     }
@@ -1853,16 +1996,18 @@ function exerciseForm(ex, fromPicker, presetName = '') {
         <div class="field"><label class="fieldlbl" for="f_part">部位</label><select id="f_part" name="part">${opt(Object.fromEntries(PARTS.map(p => [p, p])), ex.part)}</select></div>
         <div class="field"><label class="fieldlbl" for="f_measure">目標の種類</label><select id="f_measure" name="measure">${opt(MEASURES, ex.measure)}</select></div>
         <div class="field"><label class="fieldlbl" for="f_tu">時間の単位</label><select id="f_tu" name="tu">${opt({ sec: '秒', min: '分' }, ex.tu)}</select></div>
+        <div class="field"><label class="fieldlbl" for="f_du">距離の単位</label><select id="f_du" name="du">${opt({ m: 'm', km: 'km' }, ex.du || 'm')}</select></div>
+        <div class="field"><label class="fieldlbl" for="f_vu">回数の単位</label><input id="f_vu" name="vu" value="${esc(ex.vu || '')}" placeholder="回" autocomplete="off"></div>
         ${inp('c1l', '条件1の名前', ex.c1?.label, 'placeholder="例 重さ"')}
         ${inp('c1u', '条件1の単位', ex.c1?.unit, 'placeholder="例 kg"')}
         ${inp('c2l', '条件2の名前', ex.c2?.label, 'placeholder="例 傾斜"')}
         ${inp('c2u', '条件2の単位', ex.c2?.unit, 'placeholder="例 %"')}
       </div>
-      <p class="hint">条件を使わないときは名前を空にします。「時間の単位」は目標が時間のときだけ使います。</p>
+      <p class="hint">条件を使わないときは名前を空にします。単位を「分:秒」にすると、その条件はタイム（25:30 など）として入力できます。</p>
       <div class="fgrid">
         ${inp('d1', '初期値：条件1', dv.c1, 'inputmode="decimal"')}
         ${inp('d2', '初期値：条件2', dv.c2, 'inputmode="decimal"')}
-        ${inp('dv', '初期値：目標', ex.measure === 'time' && ex.tu === 'min' ? (dv.v != null ? r2(dv.v / 60) : '') : dv.v, 'inputmode="decimal"')}
+        ${inp('dv', '初期値：目標', toIn(ex, dv.v), 'inputmode="decimal"')}
         ${inp('rest', '休憩の初期値（秒）', ex.rest, 'inputmode="numeric"')}
         ${inp('mets', 'METs（運動強度）', ex.mets, 'inputmode="decimal"')}
         ${inp('pace', '100mあたりの秒数', ex.pace, 'inputmode="decimal" placeholder="距離の種目のみ"')}
@@ -1883,7 +2028,7 @@ function saveExerciseForm(form) {
   const isNew = !modalCtx.exId;
   const ex = isNew ? { id: uid() } : exById(modalCtx.exId);
   Object.assign(ex, {
-    name, cat: f.cat, part: f.part, measure: f.measure, tu: f.tu,
+    name, cat: f.cat, part: f.part, measure: f.measure, tu: f.tu, du: f.du === 'km' ? 'km' : null, vu: f.vu.trim() || null,
     c1: cond(f.c1l, f.c1u), c2: cond(f.c2l, f.c2u),
     mets: parseNum(f.mets) || 4,
     pace: parseNum(f.pace),
