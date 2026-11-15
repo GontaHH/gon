@@ -116,35 +116,55 @@
   .note { min-height: 80px; padding: 10px 12px; resize: vertical; line-height: 1.5; }
   .empty { text-align: center; padding: 28px 12px; color: var(--muted); }
   .empty p:first-child { color: var(--text); font-weight: 600; margin-bottom: 4px; }
-  .linkbtn { background: none; border: 0; color: var(--accent); font-size: 14px; font-weight: 600; padding: 4px 0 10px; display: block; margin: 0 auto; }
 
   /* ---------- today ---------- */
-  .datebar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-  .datebar .iconbtn { font-size: 30px; color: var(--text); }
-  .datepick { position: relative; display: flex; align-items: center; gap: 8px; font-size: 1.15rem; font-weight: 700; padding: 6px 12px; border-radius: 12px; }
-  .datepick em { font-style: normal; font-size: 12px; background: var(--accent-soft); color: var(--accent); padding: 2px 8px; border-radius: 999px; }
+  .datebar { display: flex; align-items: center; gap: 2px; margin: -4px -8px 8px; }
+  .datebar .iconbtn { font-size: 28px; color: var(--text); width: 40px; }
+  .datebar .more { margin-left: auto; font-size: 22px; color: var(--muted); }
+  .datepick { position: relative; display: flex; align-items: center; font-size: 1.1rem; font-weight: 700; padding: 6px 4px; border-radius: 12px; }
+  .todaytag { font-style: normal; font-size: 12px; font-weight: 700; background: var(--accent-soft); color: var(--accent); padding: 2px 8px; border-radius: 999px; }
+  .todaybtn { font-size: 12px; font-weight: 700; border: 1px solid var(--line); background: none; color: var(--accent); padding: 3px 10px; border-radius: 999px; }
+  .sumline { margin-bottom: 14px; }
+  .sumtext { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .sumtext b { color: var(--text); font-size: 17px; }
+  .sumline .progress { margin-top: 6px; height: 4px; }
+  .listhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px; font-size: 13px; color: var(--muted); font-weight: 700; }
+  .listhead .btn { min-height: 32px; }
+  .editlist { margin: 6px 0 14px; }
+  .erow { display: grid; grid-template-columns: 36px 1fr auto auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .edel { width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(255, 107, 107, .15); color: #ff7b7b; font-size: 16px; font-weight: 800; }
+  .ename { min-width: 0; }
+  .ename b { display: block; font-size: 15px; line-height: 1.3; }
+  .ename small { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .estep { display: flex; align-items: center; gap: 4px; }
+  .estep b { min-width: 1.6em; text-align: center; font-size: 17px; font-variant-numeric: tabular-nums; }
+  .estep button, .emove button { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface2); font-size: 18px; font-weight: 700; }
+  .emove { display: flex; gap: 4px; }
+  .emove button[disabled] { opacity: .3; }
+  .daynote { display: block; width: 100%; text-align: left; border: 0; background: none; color: var(--muted); font-size: 13px; padding: 0 0 12px; white-space: pre-wrap; }
+  .startrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .startrow .btn { padding: 0 6px; font-size: 13px; }
+  .addbox { margin-top: 4px; }
+  .addrow { display: flex; gap: 8px; }
+  .addrow .search { margin-bottom: 0; flex: 1; }
+  .addrow .addlist { flex: none; min-height: 46px; }
+  #qaList { margin-top: 6px; }
+  .addbox .qachips { flex-wrap: nowrap; overflow-x: auto; margin: 8px -16px 0; padding: 0 16px 4px; scrollbar-width: none; }
+  .addbox .qachips::-webkit-scrollbar { display: none; }
+  .addbox .qachips .chip { flex: none; }
+  #snack {
+    position: fixed; left: 12px; right: 12px; z-index: 81; max-width: 616px; margin: 0 auto;
+    bottom: calc(var(--tabh) + env(safe-area-inset-bottom) + 12px);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: #f2f3f7; color: #15171e; font-size: 14px; font-weight: 600; padding: 8px 8px 8px 16px; border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .4); opacity: 0; transform: translateY(16px); pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  #snack.show { opacity: 1; transform: none; pointer-events: auto; }
+  #snack button { border: 0; background: none; color: #d9480f; font-weight: 800; font-size: 14px; padding: 8px 10px; }
   .datepick input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; }
-  .sumgrid { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
-  .sumgrid .k { font-size: 12px; color: var(--muted); }
-  .sumgrid .v { font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.3; }
-  .sumgrid .v small { font-size: 12px; font-weight: 600; color: var(--muted); margin-left: 2px; }
   .progress { height: 6px; border-radius: 3px; background: var(--surface2); margin-top: 10px; overflow: hidden; }
   .progress > div { height: 100%; background: var(--good); border-radius: 3px; transition: width .3s; }
 
-  .item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin: -4px -6px 0 0; }
-  .item-title { padding-top: 4px; min-width: 0; }
-  .item-title h3 { font-size: 1.1rem; line-height: 1.35; word-break: break-word; }
-  .cat { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 6px; background: var(--surface2); color: var(--muted); margin-bottom: 2px; }
-  .prev { font-size: 13px; color: var(--muted); margin: 4px 0 8px; }
-  .item-tools { display: flex; gap: 8px; flex-wrap: wrap; }
-  .set-grid { display: grid; grid-template-columns: 2.4rem repeat(var(--n), minmax(0, 1fr)) 2.9rem; gap: 6px; align-items: center; }
-  .set-head { margin-top: 12px; }
-  .set-head span { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.2; }
-  .set { padding: 8px 0; border-top: 1px solid var(--line); }
-  .set + .set { }
-  .set .set-grid + .set-grid { margin-top: 6px; }
-  .set-no { font-weight: 800; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
-  .set .lbl { font-size: 11px; color: var(--muted); text-align: center; }
   .in {
     width: 100%; height: 42px; border-radius: 10px; border: 1px solid var(--line);
     background: var(--bg); color: var(--text); font-size: 17px; font-weight: 700;
@@ -153,20 +173,7 @@
   .in:focus, .field input:focus, .search:focus, .note:focus, .tin:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   .in.plan { height: 36px; background: transparent; border-style: dashed; color: var(--muted); font-size: 16px; font-weight: 600; }
   .in.act::placeholder { color: var(--faint); font-weight: 600; }
-  .set.done .in.act { border-color: var(--good); background: var(--good-soft); }
-  .set.done.under .in.act { border-color: var(--warn); background: rgba(242, 179, 61, .08); }
-  .check { width: 100%; height: 42px; border-radius: 10px; border: 1.5px solid var(--line); background: transparent; color: var(--faint); font-size: 20px; font-weight: 800; }
-  .set.done .check { background: var(--good); border-color: var(--good); color: #062014; }
-  .set.done.under .check { background: var(--warn); border-color: var(--warn); color: #241800; }
-  .x { width: 100%; height: 36px; border: 0; background: none; color: var(--faint); font-size: 20px; border-radius: 10px; }
-  .item-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
-  .item-foot .kcal { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .actions { margin: 4px 0 16px; }
   .prevmemo { font-size: 13px; color: var(--warn); margin: -4px 0 8px; }
-  .memo-in { display: block; width: 100%; min-height: 40px; margin-top: 10px; padding: 8px 12px; resize: none; line-height: 1.45; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font-size: 16px; }
-  .memo-in::placeholder { color: var(--faint); font-size: 14px; }
-  .memo-in:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-  .restafter { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 10px -14px -14px; padding: 10px 14px; background: rgba(61, 139, 255, .12); border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius); color: #c8dbff; font-size: 14px; }
   .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -16px 12px; padding: 0 16px 4px 0; scrollbar-width: thin; }
   .mtable { border-collapse: separate; border-spacing: 0 6px; }
   .mtable th, .mtable td { padding: 0 3px 0 0; vertical-align: middle; }
@@ -386,6 +393,7 @@
 <div id="modal" hidden></div>
 <div id="timerOverlay" hidden></div>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="snack" role="status" aria-live="polite"></div>
 <input type="file" id="importFile" accept="application/json,.json" hidden>
 
 <script>
@@ -725,6 +733,7 @@ function render() {
   afterRender[state.view]?.();
 }
 function go(view) {
+  closeModal();
   if (view === 'rec' && state.view === 'today') state.rec.date = state.date;
   state.view = view;
   render();
@@ -737,35 +746,30 @@ function go(view) {
 function renderToday() {
   const d = state.date, s = sessionOf(d), isToday = d === today();
   const items = s?.items || [];
+  const editing = state.editDay && items.length > 0;
   return `
     <div class="datebar">
       <button class="iconbtn" data-action="dateShift" data-n="-1" aria-label="前の日">‹</button>
-      <label class="datepick"><span>${fmtDateLong(d)}</span>${isToday ? '<em>今日</em>' : ''}
-        <input type="date" id="datePick" value="${d}" aria-label="日付を選ぶ"></label>
+      <label class="datepick"><span>${fmtDateLong(d)}</span><input type="date" id="datePick" value="${d}" aria-label="日付を選ぶ"></label>
+      ${isToday ? '<em class="todaytag">今日</em>' : '<button class="todaybtn" data-action="goToday">今日へ</button>'}
       <button class="iconbtn" data-action="dateShift" data-n="1" aria-label="次の日">›</button>
+      <button class="iconbtn more" data-action="dayMenu" aria-label="この日のメニュー">⋯</button>
     </div>
-    ${isToday ? '' : '<button class="linkbtn" data-action="goToday">今日に戻る</button>'}
-    ${items.length ? `<div class="card" id="summary">${summaryHtml()}</div>` : ''}
-    ${items.length ? `<div class="seg" role="tablist">
-      <button class="${todayView() === 'table' ? 'active' : ''}" data-action="setView" data-v="table" role="tab">表で見る</button>
-      <button class="${todayView() === 'cards' ? 'active' : ''}" data-action="setView" data-v="cards" role="tab">1種目ずつ入力</button></div>` : ''}
-    ${items.length ? (todayView() === 'table' ? renderTable(items, d) : items.map(it => renderItem(it, d)).join('')) : ''}
-    ${items.length ? '' : `<div class="empty"><p>この日のメニューはまだありません</p><p class="small">下の欄に種目名を入れるか、よく使う種目をタップして追加できます</p></div>`}
+    ${items.length ? `
+      <div class="sumline" id="summary">${summaryHtml()}</div>
+      <div class="listhead">
+        <span>${items.length}種目</span>
+        <button class="btn small ${editing ? 'primary' : 'ghost'}" data-action="toggleEdit">${editing ? '完了' : '編集'}</button>
+      </div>
+      ${editing ? renderEditList(items) : renderTable(items)}
+      ${s.note ? `<button class="daynote" data-action="dayNote">📝 ${esc(s.note)}</button>` : ''}` : `
+      <div class="empty"><p>メニューはまだありません</p><p class="small">下の欄から種目を追加するか、まとめて作れます</p></div>
+      <div class="startrow">
+        <button class="btn" data-action="importText">テキストから</button>
+        <button class="btn" data-action="copyDay">他の日から</button>
+        <button class="btn" data-action="go" data-view="rec">おすすめから</button>
+      </div>`}
     ${quickAddHtml()}
-    <div class="actions">
-      <button class="btn block" data-action="addItem">一覧から種目を選ぶ</button>
-      <div class="row2">
-        <button class="btn block" data-action="importText">テキストから取り込み</button>
-        <button class="btn block" data-action="copyDay">他の日からコピー</button>
-      </div>
-      <button class="btn block" data-action="go" data-view="rec" style="margin-top:10px">おすすめから作る</button>
-    </div>
-    ${s ? `
-      <div class="card">
-        <label class="fieldlbl" for="noteBox">メモ</label>
-        <textarea id="noteBox" class="note" data-input="note" placeholder="体調、HYROXの合計タイムなど">${esc(s.note)}</textarea>
-      </div>
-      <button class="btn ghost danger block" data-action="deleteDay">この日の記録を削除</button>` : ''}
   `;
 }
 function summaryHtml() {
@@ -775,95 +779,58 @@ function summaryHtml() {
   const plan = items.reduce((t, i) => t + itemKcal(i, d, 'plan'), 0);
   const pct = sets.length ? done / sets.length * 100 : 0;
   return `
-    <div class="sumgrid">
-      <div><div class="k">実績</div><div class="v">${nfmt(act)}<small>kcal</small></div></div>
-      <div><div class="k">計画</div><div class="v" style="color:var(--muted)">${nfmt(plan)}<small>kcal</small></div></div>
-      <div><div class="k">セット</div><div class="v">${done}<small>/ ${sets.length}</small></div></div>
-    </div>
+    <div class="sumtext"><span><b>${done}</b> / ${sets.length} セット</span><span><b>${nfmt(act)}</b> / ${nfmt(plan)} kcal</span></div>
     <div class="progress" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100"><div style="width:${pct}%"></div></div>`;
 }
 function updateSummary() { const el = $('#summary'); if (el) el.innerHTML = summaryHtml(); }
 
 const MISSING_EX = { name: '（削除された種目）', measure: 'reps', c1: null, c2: null, cat: 'strength', tu: 'sec' };
 function itemFields(ex) { return [ex.c1 && 'c1', ex.c2 && 'c2', 'v'].filter(Boolean); }
-function renderItem(it, d) {
-  const ex = exById(it.exId) || MISSING_EX;
-  const prev = historyOf(it.exId, d)[0];
-  const fields = itemFields(ex);
-  const head = fields.map(f => f === 'v' ? `${MEASURES[ex.measure]}<br>(${vUnit(ex)})` : `${esc(ex[f].label)}<br>(${esc(ex[f].unit)})`);
-  return `
-  <section class="card item" data-item="${it.id}" style="--n:${fields.length}">
-    <div class="item-head">
-      <div class="item-title"><span class="cat">${CATS[ex.cat] || ''}</span><h3>${esc(ex.name)}</h3></div>
-      <button class="iconbtn" data-action="itemMenu" aria-label="種目メニュー">⋯</button>
-    </div>
-    <div class="prev">${prev ? `前回 ${fmtDate(prev.date)}：${esc(fmtSets(ex, prev.item.sets, true))}` : '前回の記録なし'}</div>
-    ${prev?.item.memo ? `<div class="prevmemo">前回のメモ：${esc(prev.item.memo)}</div>` : ''}
-    <div class="item-tools">
-      <button class="btn small" data-action="copyPrev" ${prev ? '' : 'disabled'}>↺ 前回と同じ</button>
-      <button class="btn small ghost" data-action="editRest">${it.rest > 0 ? `休憩 ${fmtDur(it.rest)}` : '休憩なし'}</button>
-      ${ex.measure === 'time' ? '<button class="btn small ghost" data-action="itemTimer">⏱ タイマー</button>' : ''}
-    </div>
-    <div class="set-grid set-head"><span></span>${head.map(h => `<span>${h}</span>`).join('')}<span></span></div>
-    ${it.sets.map((s, i) => renderSet(ex, s, i, fields)).join('')}
-    <textarea class="memo-in" data-input="memo" rows="${Math.min(4, Math.max(1, Math.ceil((it.memo || '').length / 20)))}" placeholder="メモ（フォームの注意、次回へのメモなど）" aria-label="種目のメモ">${esc(it.memo || '')}</textarea>
-    <div class="item-foot">
-      <button class="btn small ghost" data-action="addSet">＋ セット追加</button>
-      <span class="kcal" data-kcal>${kcalText(it, d)}</span>
-    </div>
-    ${it.restAfter > 0 ? `<div class="restafter"><span>この後レスト <b>${fmtDur(it.restAfter)}</b></span><button class="btn small" data-action="restAfterStart">▶ 開始</button></div>` : ''}
-  </section>`;
-}
-function kcalText(it, d) { return `実績 ${nfmt(itemKcal(it, d, 'actual'))} / 計画 ${nfmt(itemKcal(it, d, 'plan'))} kcal`; }
-function renderSet(ex, s, i, fields) {
-  const av = s.done ? actualVals(s) : null;
-  const show = (vals, f) => f === 'v' ? toIn(ex, vals.v) : fmtIn(vals[f]);
-  return `
-    <div class="set ${s.done ? 'done' : ''} ${isUnder(s) ? 'under' : ''}" data-set="${i}">
-      <div class="set-grid">
-        <span class="set-no">${i + 1}</span>
-        ${fields.map(f => `<input class="in plan" data-kind="p" data-f="${f}" inputmode="decimal" autocomplete="off" value="${show(s.p, f)}" aria-label="セット${i + 1} 計画">`).join('')}
-        <button class="x" data-action="delSet" aria-label="セット${i + 1}を削除">×</button>
+function renderEditList(items) {
+  return `<div class="editlist">${items.map((it, i) => {
+    const ex = exById(it.exId) || MISSING_EX;
+    return `<div class="erow" data-item="${it.id}">
+      <button class="edel" data-action="removeItem" aria-label="${esc(ex.name)}を外す">✕</button>
+      <div class="ename"><b>${esc(ex.name)}</b><small>${esc(fmtSets(ex, it.sets, false))}</small></div>
+      <div class="estep" aria-label="セット数">
+        <button data-action="setCount" data-d="-1" aria-label="セットを減らす">−</button>
+        <b>${it.sets.length}</b>
+        <button data-action="setCount" data-d="1" aria-label="セットを増やす">＋</button>
       </div>
-      <div class="set-grid">
-        <span class="lbl">実績</span>
-        ${fields.map(f => `<input class="in act" data-kind="a" data-f="${f}" inputmode="decimal" autocomplete="off" value="${av ? show(av, f) : ''}" placeholder="${show(s.p, f)}" aria-label="セット${i + 1} 実績">`).join('')}
-        <button class="check" data-action="toggleSet" aria-pressed="${s.done}" aria-label="セット${i + 1} 完了">✓</button>
+      <div class="emove">
+        <button data-action="moveRow" data-d="-1" ${i === 0 ? 'disabled' : ''} aria-label="上へ">↑</button>
+        <button data-action="moveRow" data-d="1" ${i === items.length - 1 ? 'disabled' : ''} aria-label="下へ">↓</button>
       </div>
     </div>`;
+  }).join('')}</div>`;
 }
-function rerenderItem(id) {
-  const card = $(`[data-item="${id}"]`), it = findItem(id);
-  if (card && it) card.outerHTML = renderItem(it, state.date);
+function addSetTo(it) {
+  const ex = exById(it.exId), last = it.sets[it.sets.length - 1];
+  const p = last ? { ...last.p } : { c1: ex?.def?.c1 ?? null, c2: ex?.def?.c2 ?? null, v: ex?.def?.v ?? null };
+  it.sets.push({ p, a: null, done: false });
 }
-function onSetInput(el) {
-  const card = el.closest('[data-item]'), it = findItem(card.dataset.item);
-  const setEl = el.closest('.set'), s = it?.sets[+setEl.dataset.set], ex = exById(it?.exId);
-  if (!s || !ex) return;
-  const f = el.dataset.f;
-  let val = parseNum(el.value);
-  if (val != null && f === 'v') val = fromIn(ex, val);
-  if (el.dataset.kind === 'p') {
-    s.p[f] = val;
-    const act = setEl.querySelector(`.in.act[data-f="${f}"]`);
-    if (act) act.placeholder = el.value;
-  } else {
-    if (!s.a) s.a = { ...s.p };
-    s.a[f] = val;
-    if (!s.done) {
-      // 実績を打ち始めたら完了扱いにし、空欄は計画値で埋める
-      s.done = true;
-      setEl.classList.add('done');
-      setEl.querySelector('.check').setAttribute('aria-pressed', 'true');
-      $$('.in.act', setEl).forEach(inp => {
-        if (inp !== el && inp.value === '') { const ff = inp.dataset.f; inp.value = ff === 'v' ? toIn(ex, s.a[ff]) : fmtIn(s.a[ff]); }
-      });
-    }
-  }
-  setEl.classList.toggle('under', isUnder(s));
-  save();
-  card.querySelector('[data-kcal]').textContent = kcalText(it, state.date);
-  updateSummary();
+let lastRemoved = null;
+function removeItem(itemId) {
+  const s = sessionOf(state.date), i = s?.items.findIndex(x => x.id === itemId) ?? -1;
+  if (i < 0) return;
+  const [it] = s.items.splice(i, 1);
+  lastRemoved = { date: state.date, it, i };
+  save(); render();
+  snack(`${(exById(it.exId) || MISSING_EX).name}を外しました`, '元に戻す', () => {
+    if (!lastRemoved) return;
+    const ss = ensureSession(lastRemoved.date);
+    ss.items.splice(Math.min(lastRemoved.i, ss.items.length), 0, lastRemoved.it);
+    lastRemoved = null; save(); render();
+  });
+}
+let snackTimer, snackFn;
+function snack(msg, label, fn) {
+  const el = $('#snack');
+  snackFn = fn;
+  el.innerHTML = `<span>${esc(msg)}</span><button data-action="snackDo">${esc(label)}</button>`;
+  el.classList.add('show');
+  clearTimeout(snackTimer);
+  snackTimer = setTimeout(() => el.classList.remove('show'), 6000);
 }
 function addItemToDay(exId, date) {
   const ex = exById(exId);
@@ -884,13 +851,8 @@ function addItemToDay(exId, date) {
 const cloneSetsAsPlan = sets => sets.map(s => ({ p: { ...(s.done ? actualVals(s) : s.p) }, a: null, done: false }));
 
 /* ---------- 表ビュー ---------- */
-const todayView = () => db.settings.todayView || 'table';
 const ctxItem = el => itemOf(el) || findItem(modalCtx.itemId);
-function refreshItem(id) {
-  if (state.view !== 'today') return;
-  if (todayView() === 'cards' && $(`[data-item="${id}"]`)) { rerenderItem(id); updateSummary(); }
-  else render();
-}
+function refreshItem() { if (state.view === 'today') render(); }
 function maybeStartRest(it) {
   const ex = exById(it.exId);
   unlockAudio();
@@ -915,7 +877,7 @@ function unitHint(ex) {
   const cs = [ex.c1, ex.c2].filter(Boolean).map(c => c.label);
   return (cs.length ? cs.join('/') + ' · ' : '') + MEASURES[ex.measure];
 }
-function renderTable(items, d) {
+function renderTable(items) {
   const cols = Math.max(3, ...items.map(it => it.sets.length + 1));
   const head = `<tr><th class="sticky">種目</th>${Array.from({ length: cols }, (_, i) => `<th>${i + 1}</th>`).join('')}</tr>`;
   const rows = items.map(it => {
@@ -928,12 +890,11 @@ function renderTable(items, d) {
     while (cells.length < cols) cells.push('<td></td>');
     return `<tr data-item="${it.id}">
         <th class="sticky"><button class="exbtn ${done === it.sets.length && done ? 'alldone' : ''}" data-action="itemMenu">
-          <b>${esc(ex.name)}</b><small>${done}/${it.sets.length}セット · ${esc(unitHint(ex))}${it.memo ? ' · 📝' : ''}</small></button></th>
+          <b>${esc(ex.name)}</b><small>${done}/${it.sets.length} · ${esc(unitHint(ex))}${it.memo ? ' · 📝' : ''}</small></button></th>
         ${cells.join('')}</tr>
       ${it.restAfter > 0 ? `<tr class="restrow" data-item="${it.id}"><td colspan="${cols + 1}"><div class="restband"><span>レスト <b>${fmtDur(it.restAfter)}</b></span><button class="btn small" data-action="restAfterStart">▶ 開始</button></div></td></tr>` : ''}`;
   }).join('');
-  return `<div class="tbl-wrap"><table class="mtable"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
-    <p class="small muted" style="margin:-4px 0 12px">セルをタップで記録・変更、種目名をタップで前回と同じ・休憩・メモなど</p>`;
+  return `<div class="tbl-wrap"><table class="mtable"><thead>${head}</thead><tbody>${rows}</tbody></table></div>`;
 }
 function openCell(itemId, idx) {
   const it = findItem(itemId), s = it?.sets[idx], ex = exById(it?.exId);
@@ -977,13 +938,14 @@ function quickAddHtml() {
   const counts = {};
   db.sessions.forEach(ss => ss.items.forEach(i => { counts[i.exId] = (counts[i.exId] || 0) + 1; }));
   const inToday = new Set((sessionOf(state.date)?.items || []).map(i => i.exId));
-  const freq = Object.entries(counts).filter(([id]) => exById(id) && !inToday.has(id)).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([id]) => exById(id));
-  return `<div class="card quickadd">
-    <label class="fieldlbl" for="qaInput">種目を追加</label>
-    <input id="qaInput" class="search" type="search" autocomplete="off" placeholder="種目名を入力（例：ベンチ）" value="${esc(state.qa || '')}">
+  const freq = Object.entries(counts).filter(([id]) => exById(id) && !inToday.has(id)).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([id]) => exById(id));
+  return `<div class="addbox">
+    <div class="addrow">
+      <input id="qaInput" class="search" type="search" autocomplete="off" enterkeyhint="done" placeholder="＋ 種目を追加（名前を入力）" value="${esc(state.qa || '')}" aria-label="種目を追加">
+      <button class="btn addlist" data-action="addItem" aria-label="一覧から選ぶ">一覧</button>
+    </div>
     <div id="qaList">${qaListHtml()}</div>
-    ${freq.length ? `<div class="small muted" style="margin:6px 0 6px">よく使う種目（前回と同じセットで追加）</div>
-      <div class="qachips">${freq.map(e => `<button class="chip" data-action="qaPick" data-id="${e.id}">${esc(e.name)}</button>`).join('')}</div>` : ''}
+    ${freq.length ? `<div class="qachips" aria-label="よく使う種目">${freq.map(e => `<button class="chip" data-action="qaPick" data-id="${e.id}">＋ ${esc(e.name)}</button>`).join('')}</div>` : ''}
   </div>`;
 }
 function qaListHtml() {
@@ -1875,7 +1837,7 @@ function closeModal() {
   if (m.hidden) return;
   m.hidden = true; m.innerHTML = '';
   // 一覧からの連続追加やメニューでのメモ編集を画面に反映
-  if (state.view === 'today' && (modalCtx.added || modalCtx.itemId)) { modalCtx = {}; render(); }
+  if (state.view === 'today' && (modalCtx.added || modalCtx.itemId || modalCtx.rerender)) { modalCtx = {}; render(); }
   if ($('#timerOverlay').hidden) document.body.classList.remove('noscroll');
 }
 function formModal({ title, fields, okLabel = '保存', onOk }) {
@@ -1914,16 +1876,53 @@ const A = {
     const it = addItemToDay(el.dataset.id, state.date);
     if (!it) return;
     save(); state.qa = ''; render();
-    toast(`${exById(it.exId).name}を追加しました${historyOf(it.exId, state.date).length ? '（前回と同じセット）' : ''}`);
+    toast(`${exById(it.exId).name}を追加${historyOf(it.exId, state.date).length ? '（前回と同じ）' : ''}`);
   },
   qaNew: () => { const name = state.qa; state.qa = ''; exerciseForm(null, true, name); },
-  setView: el => { db.settings.todayView = el.dataset.v; save(); render(); },
-  cellEdit: el => openCell(el.closest('[data-item]').dataset.item, +el.dataset.set),
-  cellAdd: el => {
-    const it = ctxItem(el), ex = exById(it.exId), last = it.sets[it.sets.length - 1];
-    const p = last ? { ...last.p } : { c1: ex?.def?.c1 ?? null, c2: ex?.def?.c2 ?? null, v: ex?.def?.v ?? null };
-    it.sets.push({ p, a: null, done: false }); save(); refreshItem(it.id);
+  toggleEdit: () => { state.editDay = !state.editDay; render(); },
+  removeItem: el => removeItem(itemOf(el).id),
+  snackDo: () => { $('#snack').classList.remove('show'); const f = snackFn; snackFn = null; f?.(); },
+  setCount: el => {
+    const it = itemOf(el);
+    if (+el.dataset.d > 0) addSetTo(it);
+    else {
+      if (it.sets.length <= 1) { toast('種目ごと外すときは ✕ を押してください'); return; }
+      if (it.sets[it.sets.length - 1].done && !confirm('最後のセットには実績が入っています。削除しますか？')) return;
+      it.sets.pop();
+    }
+    save(); render();
   },
+  moveRow: el => {
+    const s = sessionOf(state.date), i = s.items.findIndex(x => x.id === itemOf(el).id), j = i + +el.dataset.d;
+    if (j < 0 || j >= s.items.length) return;
+    [s.items[i], s.items[j]] = [s.items[j], s.items[i]];
+    save(); render();
+  },
+  dayMenu: () => {
+    const s = sessionOf(state.date), has = !!s?.items.length;
+    modalCtx = {};
+    openModal(`<h2>${fmtDateLong(state.date)}</h2><div class="menu">
+      <button class="btn block" data-action="importText">テキストから取り込み</button>
+      <button class="btn block" data-action="copyDay">他の日のメニューをコピー</button>
+      <button class="btn block" data-action="go" data-view="rec">おすすめメニューから作る</button>
+      <button class="btn block" data-action="dayNote">この日のメモ${s?.note ? '（あり）' : ''}</button>
+      ${has ? '<button class="btn block" data-action="allDayDone">すべて計画どおり完了にする</button>' : ''}
+      ${s ? '<button class="btn block ghost danger" data-action="deleteDay">この日の記録を削除</button>' : ''}
+      <button class="btn block ghost" data-action="closeModal">閉じる</button></div>`);
+  },
+  dayNote: () => {
+    const s = ensureSession(state.date);
+    modalCtx = { rerender: true };
+    openModal(`<h2>この日のメモ</h2>
+      <textarea id="noteBox" class="note" data-input="note" style="min-height:140px" placeholder="体調、HYROXの合計タイムなど">${esc(s.note)}</textarea>
+      <button class="btn primary block" data-action="closeModal" style="margin-top:10px">閉じる</button>`);
+  },
+  allDayDone: () => {
+    sessionOf(state.date)?.items.forEach(it => it.sets.forEach(s => { if (!s.done) { s.a = { ...s.p }; s.done = true; } }));
+    save(); closeModal(); render(); toast('すべて完了にしました');
+  },
+  cellEdit: el => openCell(el.closest('[data-item]').dataset.item, +el.dataset.set),
+  cellAdd: el => { const it = ctxItem(el); addSetTo(it); save(); refreshItem(); },
   cellDone: () => {
     const it = findItem(modalCtx.itemId), s = it?.sets[modalCtx.set];
     if (!s) return;
@@ -1936,18 +1935,6 @@ const A = {
     if (it.sets[modalCtx.set].done && !confirm('実績が入っています。このセットを削除しますか？')) return;
     it.sets.splice(modalCtx.set, 1); save(); closeModal(); refreshItem(it.id);
   },
-  toggleSet: el => {
-    const it = itemOf(el), idx = +el.closest('.set').dataset.set, s = it.sets[idx];
-    if (s.done) { s.done = false; s.a = null; }
-    else { s.a = { ...s.p }; s.done = true; maybeStartRest(it); }
-    save(); rerenderItem(it.id); updateSummary();
-  },
-  delSet: el => {
-    const it = itemOf(el), idx = +el.closest('.set').dataset.set;
-    if (it.sets[idx].done && !confirm('実績が入っています。このセットを削除しますか？')) return;
-    it.sets.splice(idx, 1); save(); rerenderItem(it.id); updateSummary();
-  },
-  addSet: el => A.cellAdd(el),
   allDone: () => {
     const it = findItem(modalCtx.itemId);
     it.sets.forEach(s => { if (!s.done) { s.a = { ...s.p }; s.done = true; } });
@@ -1991,7 +1978,7 @@ const A = {
         <button class="btn block" data-action="moveItem" data-d="1">↓ 下へ</button>
       </div>
       ${exById(it.exId) ? `<button class="btn block ghost" data-action="editEx" data-id="${it.exId}">種目の設定（条件・単位）を編集</button>` : ''}
-      <button class="btn block ghost danger" data-action="delItem">この種目を外す</button>
+      <button class="btn block ghost danger" data-action="delItem">この種目を外す（元に戻せます）</button>
       <button class="btn block ghost" data-action="closeMenu">閉じる</button></div>`);
   },
   closeMenu: () => { closeModal(); render(); },
@@ -2011,13 +1998,7 @@ const A = {
     [s.items[i], s.items[j]] = [s.items[j], s.items[i]];
     save(); closeModal(); render();
   },
-  delItem: () => {
-    const s = sessionOf(state.date), it = s.items.find(x => x.id === modalCtx.itemId);
-    if (it?.sets.some(x => x.done) && !confirm('実績が入っています。削除しますか？')) return;
-    s.items = s.items.filter(x => x.id !== modalCtx.itemId);
-    if (!s.items.length && !s.note) db.sessions = db.sessions.filter(x => x !== s);
-    save(); closeModal(); render();
-  },
+  delItem: () => { const id = modalCtx.itemId; closeModal(); removeItem(id); },
   itemTimer: el => {
     const it = ctxItem(el), ex = exById(it.exId), phases = [{ type: 'prep', dur: 10 }];
     const sets = it.sets.filter(s => !s.done);
@@ -2054,7 +2035,7 @@ const A = {
   },
   deleteDay: () => {
     if (!confirm(`${fmtDateLong(state.date)}の計画と実績をすべて削除しますか？`)) return;
-    db.sessions = db.sessions.filter(s => s.date !== state.date); save(); render();
+    db.sessions = db.sessions.filter(s => s.date !== state.date); save(); closeModal(); render();
   },
 
   recType: el => { state.rec.type = el.dataset.t; state.rec.items = null; render(); },
@@ -2146,9 +2127,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('input', e => {
   const el = e.target;
-  if (el.matches('.in[data-f]')) return onSetInput(el);
   if (el.matches('[data-input="note"]')) { const s = ensureSession(state.date); s.note = el.value; save(); return; }
-  if (el.matches('[data-input="memo"]')) { const it = itemOf(el); if (it) { it.memo = el.value; save(); } return; }
   if (el.id === 'impText') { renderImportPreview(); return; }
   if (el.id === 'qaInput') { state.qa = el.value; $('#qaList').innerHTML = qaListHtml(); return; }
   if (el.matches('[data-input="memoModal"]')) { const it = findItem(modalCtx.itemId); if (it) { it.memo = el.value; save(); } return; }
